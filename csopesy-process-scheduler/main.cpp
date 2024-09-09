@@ -3,7 +3,9 @@
 
 #include"shell.h"
 
-void printHeading() {
+void read_command(std::string input);
+
+void print_heading() {
 	std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
 	std::cout << " / ____| / ____| / __ \\ |  __ \\ |  ____| / ____|\\ \\   / /\n";
 	std::cout << "| |     | (___  | |  | || |__) || |__   | (___   \\ \\_/ / \n";
@@ -16,8 +18,7 @@ void printHeading() {
 }
 
 int main() {
-	printHeading();
-	bool isInitialized;
+	print_heading();
 	// Get User Input
 	std::string input;
 	while (true) {
@@ -26,6 +27,7 @@ int main() {
 		if (input == "exit") {
 			break;
 		}
+		read_command(input); //located in shell.h
 	};
 
 	return 0;
