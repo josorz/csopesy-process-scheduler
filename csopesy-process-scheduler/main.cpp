@@ -1,9 +1,7 @@
 #include<iostream>
 #include<string>
-#include"initialize.h"
 
-
-bool initialize(Config *config);
+#include"shell.h"
 
 void printHeading() {
 	std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
@@ -22,7 +20,6 @@ int main() {
 	bool isInitialized;
 	// Get User Input
 	std::string input;
-	Config config;
 	while (true) {
 		std::cout << "Enter a command: ";
 		std::getline(std::cin, input);
