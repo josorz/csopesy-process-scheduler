@@ -1,47 +1,49 @@
 #pragma once
-
 #include <iostream>
+#include <thread>
 #include <iomanip>
 #include <cstdlib>
 #include <sstream>
 #include <chrono>
+#include <queue>
 #include <ctime>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <Windows.h>
 #include <functional>
+#include <mutex>
+#include <fstream>
+
+void print_heading();
+
+extern int used_core;
+extern int num_cpu;
+extern int total_process;
 
 // Utility Functions
 namespace Utils {
-
-    // used for now
-    int generateRandomNumber(int lower, int upper) {
-        srand(time(0));
-        return rand() % (upper - lower + 1) + lower;
-    }
-
-    // get current timestamp as a string
+    // Get current timestamp as a string
     std::string getCurrentTimestamp() {
-        auto now = std::chrono::system_clock::now();
-        auto now_c = std::chrono::system_clock::to_time_t(now);
-        std::tm local_tm;
-        localtime_s(&local_tm, &now_c);
+        time_t timestamp = time(NULL);
+        struct tm datetime;
+        localtime_s(&datetime, &timestamp);
         std::ostringstream oss;
-        oss << std::put_time(&local_tm, "%m/%d/%Y, %I:%M:%S %p");
+        oss << std::put_time(&datetime, "%m/%d/%Y %I:%M:%S%p");
         return oss.str();
     }
 
-    // screen loop func
+    // Screen loop function
     void runScreenLoop(std::function<void()> action) {
         std::string command;
+        action();
         while (command != "exit") {
-            system("cls");
-            action();
             std::cout << "\n  Type 'exit' to return back to main menu: ";
             std::getline(std::cin, command);
+            if (command != "exit") { std::cout << "Invalid input\n"; }
         }
         system("cls");
+        print_heading();
     }
 }
 
@@ -49,20 +51,24 @@ namespace Utils {
 class Process {
 private:
     std::string processName;
+    int core;
     int currentLine;
     int totalLines;
     std::string creationTime;
+    std::string finishTime;
+    bool fin;
 
 public:
-    // initializes process with a name and random instruction count
     Process(std::string name) {
         processName = name;
-        totalLines = Utils::generateRandomNumber(100, 200);
-        currentLine = totalLines - Utils::generateRandomNumber(20, 50);
+        core = -1;
+        currentLine = 0;
+        totalLines = 100;
         creationTime = Utils::getCurrentTimestamp();
+        fin = false;
     }
 
-    // display process information on screen
+    // Display process information on screen
     void drawConsole() {
         auto showDetails = [&]() {
             std::cout << "\n  --- SCREEN: " << processName << " ---\n";
@@ -75,20 +81,33 @@ public:
     }
 
     const std::string& getName() const { return processName; }
+    int getCore() const { return core; }
+    void setCore(int newCore) { core = newCore; }
+    int getCurrentLine() const { return currentLine; }
+    int getTotalLines() const { return totalLines; }
+    const std::string& getCreationTime() const { return creationTime; }
+    const std::string& getFinishTime() const { return finishTime; }
+    void setFinishTime(std::string finTime) { finishTime= finTime; }
+    void increaseCurrent(){ currentLine++; }
+    bool isFinished() const { return fin; }
+    void setFin(bool finish) { fin = fin; }
 };
+std::vector<Process*> process_queue;
+std::vector<Process*> running_list;
+std::vector<Process*> finished_list;
+std::mutex mtx;
 
 // Process Management
 namespace ProcessManager {
     std::vector<Process> processes;
 
-    // func to create new process and display its console
     void createProcess(const std::string& name) {
-        Process newProcess(name);
-        processes.push_back(newProcess);
-        newProcess.drawConsole();
+        Process* newProcess = new Process(name);
+        processes.push_back(*newProcess);
+        system("cls");
+        newProcess->drawConsole();
     }
 
-    // find a process by name
     Process* findProcess(const std::string& name) {
         for (auto& process : processes) {
             if (process.getName() == name) {
@@ -98,17 +117,99 @@ namespace ProcessManager {
         return nullptr;
     }
 
-    // redraw console for an existing process
     void redrawProcess(const std::string& name) {
         if (Process* process = findProcess(name)) {
+            system("cls");
             process->drawConsole();
         }
         else {
-            auto showError = []() {
-                std::cout << "\n  Process not found! Cannot redraw\n";
-                };
-            Utils::runScreenLoop(showError);
+            std::cout << "Process not found! Cannot redraw\n";
         }
+    }
+
+    void listProcess() {
+        int cpu_utilization = (used_core * 100) / num_cpu;
+        int cores_available = num_cpu - used_core;
+
+        std::cout << "CPU Utilization: " << cpu_utilization << "%\n";
+        std::cout << "Cores used: " << used_core << "\n";
+        std::cout << "Cores available: " << cores_available << "\n";
+        std::cout << "--------------------------------------\n";
+
+        std::cout << "Running processes:\n";
+        for (auto* process : running_list) {
+            std::cout << process->getName() << "   " << "(" + Utils::getCurrentTimestamp() + ")"
+                << "     core: " << process->getCore() << "    "
+                << process->getCurrentLine() << "/" << process->getTotalLines() << "\n";
+        }
+
+        std::cout << "\nFinished processes:\n";
+        for (auto* process : finished_list) {
+            std::cout << process->getName() << "   " << process->getFinishTime()
+                << "     Finished    " << process->getCurrentLine() << "/" << process->getTotalLines() << "\n";
+        }
+
+        std::cout << "--------------------------------------\n";
+    }
+}
+
+// CPU worker function
+void cpu_worker(int core_id) {
+    bool running = true;
+    while (running) {
+        Process* process = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+
+            if (!process_queue.empty()) {
+                process = process_queue.front();
+                used_core++;
+                running_list.emplace_back(process);
+                process_queue.erase(std::remove(process_queue.begin(), process_queue.end(), process), process_queue.end());
+            }
+        }
+
+        if (process) {
+            std::string fileName = process->getName() + ".txt";
+            std::remove(fileName.c_str());  // Delete the file if it exists
+
+            std::ofstream file(process->getName() + ".txt", std::ios_base::app);
+            file << "Process name: " << process->getName() + "\nLogs:\n" << std::endl;
+            while (process->getCurrentLine() < process->getTotalLines()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                process->increaseCurrent();
+                process->setFinishTime(Utils::getCurrentTimestamp());
+                file << "(" << process->getFinishTime() << ") " << "Core:" << process->getCore() << " \"Hello world from " << process->getName() << "!\"" << std::endl;
+            }            
+            {
+                std::unique_lock<std::mutex> lock(mtx);
+                finished_list.emplace_back(process);
+                running_list.erase(std::remove(running_list.begin(), running_list.end(), process), running_list.end());  // Remove from running list
+                used_core--; 
+                process->setFin(true);
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (process_queue.empty() && running_list.empty()) {
+            running = false;
+        }
+    }
+}
+
+// Scheduler function
+void scheduler() {
+    for (int i = 0; i < total_process; ++i) {
+        Process* process = new Process("Process" + std::to_string(i + 1));
+        process_queue.emplace_back(process);
+        process->setCore(i % num_cpu);
+    }
+
+    std::vector<std::thread> cpu_thread;
+    for (int i = 0; i < num_cpu; ++i) {
+        cpu_thread.emplace_back(cpu_worker, i);
+    }
+    for (auto& th : cpu_thread) {
+        th.join();
     }
 }
 
@@ -119,34 +220,28 @@ void read_command(std::string input) {
         system("cls");
     }
     else if (input.substr(0, 9) == "screen -s") {
-        // create a new process screen
         ProcessManager::createProcess(input.substr(10));
     }
     else if (input.substr(0, 9) == "screen -r") {
-        // redraw existing process screen
         ProcessManager::redrawProcess(input.substr(10));
     }
+    else if (input == "screen -ls") {
+        ProcessManager::listProcess();
+    }
     else if (input == "scheduler-test") {
-        std::cout << "\n  scheduler-test command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
+        std::cout << "scheduler-test command recognized. Doing something...\n";
     }
     else if (input == "scheduler-stop") {
-        std::cout << "\n  scheduler-stop command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
+        std::cout << "scheduler-stop command recognized. Doing something...\n";
     }
     else if (input == "report-util") {
-        std::cout << "\n  report-util command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
+        std::cout << "report-util command recognized. Doing something...\n";
     }
     else if (input == "clear") {
         system("cls");
+        print_heading();
     }
     else {
         std::cout << "\n  '" << input << "' is not recognized as an internal or external command. Clearing menu...\n";
-        Sleep(2000);
-        system("cls");
     }
 }

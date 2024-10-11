@@ -4,6 +4,7 @@
 #include"shell.h"
 
 void read_command(std::string input);
+void scheduler();
 
 void print_heading() {
     std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
@@ -17,11 +18,18 @@ void print_heading() {
     std::cout << "\033[0m";
 }
 
-int main() {
-    while (true) {
-        // Always print the header when returning to the main menu
-        print_heading();
+// dummy config for scheduler
+std::string schedulerAlgo = "fcfs";
+int used_core = 0;
+int num_cpu = 4;
+int total_process = 10;
 
+int main() {
+    print_heading();
+    //sheduler-test
+    std::thread scheduler_thread(scheduler);
+
+    while (true) {
         // Get user input
         std::string input;
         std::cout << "Enter a command: ";
@@ -36,6 +44,8 @@ int main() {
         // Pass the command to read_command function (shell.h)
         read_command(input);
     }
+
+    scheduler_thread.join();
 
     return 0;
 }
