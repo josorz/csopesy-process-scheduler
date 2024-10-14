@@ -3,8 +3,6 @@
 
 #include"shell.h"
 
-void read_command(std::string input);
-
 void print_heading() {
     std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
     std::cout << " / ____| / ____| / __ \\ |  __ \\ |  ____| / ____|\\ \\   / /\n";
@@ -18,6 +16,8 @@ void print_heading() {
 }
 
 int main() {
+    ProcessManager processManager = ProcessManager();
+
     while (true) {
         // Always print the header when returning to the main menu
         print_heading();
@@ -34,7 +34,7 @@ int main() {
         }
 
         // Pass the command to read_command function (shell.h)
-        read_command(input);
+        read_command(input, &processManager);
     }
 
     return 0;
