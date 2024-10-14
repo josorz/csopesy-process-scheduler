@@ -39,10 +39,17 @@ namespace ProcessManager {
             process->drawConsole();
         }
         else {
-            auto showError = []() {
+            // TODO: replace with proper getline
+            std::string command;
+            while (command != "exit") {
+                system("cls");
+                
                 std::cout << "\n  Process not found! Cannot redraw\n";
-                };
-            Utils::runScreenLoop(showError);
+
+                std::cout << "\n  Type 'exit' to return back to main menu: ";
+                std::getline(std::cin, command);
+            }
+            system("cls");
         }
     }
 }

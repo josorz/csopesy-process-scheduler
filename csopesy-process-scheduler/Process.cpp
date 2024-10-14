@@ -21,18 +21,6 @@ namespace Utils {
         oss << std::put_time(&local_tm, "%m/%d/%Y, %I:%M:%S %p");
         return oss.str();
     }
-
-    // screen loop func
-    void runScreenLoop(std::function<void()> action) {
-        std::string command;
-        while (command != "exit") {
-            system("cls");
-            action();
-            std::cout << "\n  Type 'exit' to return back to main menu: ";
-            std::getline(std::cin, command);
-        }
-        system("cls");
-    }
 }
 
 // initializes process with a name and random instruction count
@@ -45,14 +33,18 @@ Process::Process(std::string name) {
 
 // display process information on screen
 void Process::drawConsole() {
-    auto showDetails = [&]() {
+    // TODO: replace with proper getline
+    std::string command;
+    while (command != "exit") {
+        system("cls");
         std::cout << "\n  --- SCREEN: " << processName << " ---\n";
         std::cout << "  Process name: " << processName << "\n";
         std::cout << "  Current Instruction: " << currentLine << '/' << totalLines << "\n";
         std::cout << "  Created At: " << creationTime << "\n";
         std::cout << "  ---------------------------\n";
-        };
-    Utils::runScreenLoop(showDetails);
-}
 
-const std::string& Process::getName() const { return processName; }
+        std::cout << "\n  Type 'exit' to return back to main menu: ";
+        std::getline(std::cin, command);
+    }
+    system("cls");
+}
