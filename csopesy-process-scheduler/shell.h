@@ -58,7 +58,6 @@ namespace ProcessManager {
 void read_command(std::string input) {
     if (input == "initialize") {
         std::cout << "\n  initialize command recognized. Doing something...\n";
-        system("cls");
     }
     else if (input.substr(0, 9) == "screen -s") {
         // create a new process screen
@@ -70,25 +69,17 @@ void read_command(std::string input) {
     }
     else if (input == "scheduler-test") {
         std::cout << "\n  scheduler-test command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
     }
     else if (input == "scheduler-stop") {
         std::cout << "\n  scheduler-stop command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
     }
     else if (input == "report-util") {
         std::cout << "\n  report-util command recognized. Doing something...\n";
-        Sleep(2000);
-        system("cls");
     }
     else if (input == "clear") {
         system("cls");
     }
     else {
-        std::cout << "\n  '" << input << "' is not recognized as an internal or external command. Clearing menu...\n";
-        Sleep(2000);
-        system("cls");
+        std::cout << "\n  '" << input << "' is not recognized as an internal or external command.\n";
     }
 }
