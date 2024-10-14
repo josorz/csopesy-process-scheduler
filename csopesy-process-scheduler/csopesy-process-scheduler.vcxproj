@@ -129,10 +129,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MainConsole.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MainConsole.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="shell.h" />
