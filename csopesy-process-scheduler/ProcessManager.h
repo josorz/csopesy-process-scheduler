@@ -11,7 +11,7 @@ public:
     ~ProcessManager() = default;
     // func to create new process and display its console
     void createProcess(const std::string& name);
-
+    
     // find a process by name
     Process* findProcess(const std::string& name);
 

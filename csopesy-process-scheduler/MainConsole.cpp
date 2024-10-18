@@ -1,8 +1,12 @@
 #include <iostream>
 #include <string>
+#include <thread>
+
 #include "MainConsole.h"
+#include "FCFSScheduler.h"
 
 MainConsole::MainConsole() {
+
 }
 
 void MainConsole::printHeading() {
@@ -34,9 +38,20 @@ void MainConsole::drawConsole() {
     }
 }
 
+bool MainConsole::isInitialized() {
+    return this->initialized;
+}
+
 void MainConsole::readCommand(std::string input) {
     if (input == "initialize") {
         std::cout << "\n  initialize command recognized. Doing something...\n";
+        if (!this->isInitialized()) {
+            temp.init();
+            initialized = true;
+        }
+    }
+    else if (input.substr(0, 10) == "screen -ls") {
+        temp.listProcess(); 
     }
     else if (input.substr(0, 9) == "screen -s") {
         // create a new process screen
@@ -57,6 +72,9 @@ void MainConsole::readCommand(std::string input) {
     }
     else if (input == "clear") {
         system("cls");
+    }
+    else if (input == "exit") {
+        //std::terminate(SchedulerThread);
     }
     else {
         std::cout << "\n  '" << input << "' is not recognized as an internal or external command.\n";

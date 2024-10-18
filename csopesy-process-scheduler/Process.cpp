@@ -26,9 +26,11 @@ namespace Utils {
 // initializes process with a name and random instruction count
 Process::Process(std::string name) {
     processName = name;
-    totalLines = Utils::generateRandomNumber(100, 200);
-    currentLine = totalLines - Utils::generateRandomNumber(20, 50);
+    core = -1;
+    currentLine = 0;
+    totalLines = 100;
     creationTime = Utils::getCurrentTimestamp();
+    fin = false;
 }
 
 // display process information on screen
