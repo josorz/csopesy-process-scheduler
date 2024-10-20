@@ -23,9 +23,9 @@ public:
     void setCore(int newCore) { core = newCore; }
     int getCurrentLine() const { return currentLine; }
     int getTotalLines() const { return totalLines; }
-    const std::string& getCreationTime() const { return creationTime; }
-    const std::string& getFinishTime() const { return finishTime; }
-    void setFinishTime(std::string finTime) { finishTime = finTime; }
+    const std::string getCreationTime() const { return creationTime; }
+    const std::string getFinishTime() const { return finishTime; }
     void increaseCurrent() { currentLine++; }
+    void setFinishTime();
     bool isFinished() const { return currentLine == totalLines; }
 };

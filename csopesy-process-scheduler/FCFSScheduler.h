@@ -17,8 +17,4 @@ private:
 	// https://stackoverflow.com/questions/5877504/access-c-queue-elements-like-an-array
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;
-	std::thread schedulerThread;
-	std::vector<Process *> finished_list;
-
-	friend class Core;
 };

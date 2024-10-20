@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #include <vector>
 #include "Process.h"
 
@@ -7,6 +8,7 @@ class Scheduler
 {
 public:
 	void init();
+	void finishProcess(Process p);
 	void listProcess();
 private:
 	int num_cpu;
@@ -14,6 +16,7 @@ private:
 	int min_ins;
 	int max_ins;
 	int delays_per_exec;
-
-	friend class Core;
+protected:
+	std::vector<Process> finished_list;
+	std::thread schedulerThread;
 };

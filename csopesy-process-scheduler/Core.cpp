@@ -2,11 +2,14 @@
 
 #include "Core.h"
 #include "FCFSScheduler.h"
-#include "Scheduler.h"
 
-Core::Core(int count, std::vector<Process*> &fin) {
+#include <mutex>
+
+std::mutex z;
+
+Core::Core(int count, Scheduler *s) {
 	coreCount = count;
-	finished_list = fin;
+	scheduler = s;
 }
 
 int Core::getCore() {
@@ -25,6 +28,10 @@ std::string Core::getProcessName() {
 	return process.get()->getName();
 }
 
+std::string Core::getCreationTime() {
+	return process.get()->getCreationTime();
+}
+
 bool Core::isActive() {
 	//return active;
 	return process != nullptr;
@@ -35,21 +42,21 @@ void Core::setProcess(Process &p) {
 }
 
 void Core::runProcess() {
-	if (process.get() != nullptr) {
+	if (process != nullptr && process.get() != nullptr) {
 		this->active = true;
-
-		while (!process.get()->isFinished()) {
-			process.get()->increaseCurrent();
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
 
 		Process* p = process.get();
 
-		std::cout << process.get()->getName();
+		while (!p->isFinished()) {
+			p->increaseCurrent();
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+		z.lock();
+		scheduler->finishProcess(*p);
 
-		finished_list.push_back(p);
-
-		process = nullptr;
+		process.reset();
 		this->active = false;
+
+		z.unlock();
 	}
 }

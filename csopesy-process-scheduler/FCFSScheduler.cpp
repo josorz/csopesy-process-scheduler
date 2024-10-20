@@ -9,7 +9,6 @@ void FCFSScheduler::run() {
     while (true) {
         if (!readyQueue.empty()) {
             // find vacant core
-
             m.lock();
             for (auto& core : cores) {
                 if (!core.isActive()) {
@@ -43,7 +42,7 @@ void FCFSScheduler::init() {
 
     // initialize cores
     for (int x = 0; x < num_cores; x++) {
-        cores.push_back(Core(x, finished_list));
+        cores.push_back(Core(x, this));
     }
 
     readyQueue.push_back(Process("one"));
@@ -75,16 +74,16 @@ void FCFSScheduler::listProcess() {
     std::cout << "Running processes:\n";
     for (auto& core : cores) {
         if (core.isActive()) {
-            std::cout << core.getProcessName() << "   " << "(" /* + Utils::getCurrentTimestamp() + ")" */
+            std::cout << core.getProcessName() << "   " << "(" + core.getCreationTime()
                 << "     core: " << core.getCore() << "    "
                 << core.getCurrentLine() << "/" << core.getTotalLines() << "\n";
         }
     }
 
     std::cout << "\nFinished processes:\n";
-    for (auto* process : finished_list) {
-        std::cout << process->getName() << "   " << process->getFinishTime()
-            << "     Finished    " << process->getCurrentLine() << "/" << process->getTotalLines() << "\n";
+    for (auto process : finished_list) {
+        std::cout << process.getName() << "   " << process.getFinishTime()
+            << "     Finished    " << process.getCurrentLine() << "/" << process.getTotalLines() << "\n";
     }
 
     std::cout << "--------------------------------------\n";

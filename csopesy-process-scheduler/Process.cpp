@@ -31,6 +31,8 @@ Process::Process(std::string name) {
     totalLines = 100;
     creationTime = Utils::getCurrentTimestamp();
     fin = false;
+
+    finishTime = "wala pa";
 }
 
 // display process information on screen
@@ -49,4 +51,8 @@ void Process::drawConsole() {
         std::getline(std::cin, command);
     }
     system("cls");
+}
+
+void Process::setFinishTime() { 
+    finishTime = Utils::getCurrentTimestamp(); 
 }
