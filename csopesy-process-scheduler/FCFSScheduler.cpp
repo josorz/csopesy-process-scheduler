@@ -5,6 +5,14 @@
 
 std::mutex m;
 
+FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
+    this->num_cpu = num_cpu;
+    this->batch_process_freq = batch_process_freq;
+    this->min_ins = min_ins;
+    this->max_ins = max_ins;
+    this->delay_per_exec = delay_per_exec;
+}
+
 void FCFSScheduler::run() {
     while (true) {
         if (!readyQueue.empty()) {
@@ -45,17 +53,6 @@ void FCFSScheduler::init() {
         cores.push_back(Core(x, this));
     }
 
-    readyQueue.push_back(Process("one"));
-    readyQueue.push_back(Process("two"));
-    readyQueue.push_back(Process("three"));
-    readyQueue.push_back(Process("four"));
-    readyQueue.push_back(Process("five"));
-    readyQueue.push_back(Process("six"));
-    readyQueue.push_back(Process("seven"));
-    readyQueue.push_back(Process("eight"));
-    readyQueue.push_back(Process("nine"));
-    readyQueue.push_back(Process("ten"));
-
     // run scheduler thread 
     schedulerThread = std::thread(&FCFSScheduler::run, this);
 }
@@ -87,4 +84,8 @@ void FCFSScheduler::listProcess() {
     }
 
     std::cout << "--------------------------------------\n";
+}
+
+void FCFSScheduler::addProcess(Process p) {
+    readyQueue.push_back(p);
 }

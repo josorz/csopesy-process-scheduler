@@ -4,10 +4,18 @@
 std::mutex zz;
 
 void Scheduler::init() {
+	std::cout << "test";
+}
+
+void Scheduler::run() {
 
 }
 
 void Scheduler::listProcess() {
+
+}
+
+void Scheduler::addProcess(Process p) {
 
 }
 

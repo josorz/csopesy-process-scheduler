@@ -1,12 +1,20 @@
 #include <iostream>
+#include <thread>
 #include <string>
 
 #include "ProcessManager.h"
+#include "FCFSScheduler.h"
+#include "Scheduler.h"
+
+ProcessManager::~ProcessManager() {
+    delete scheduler;
+}
 
 // func to create new process and display its console
 void ProcessManager::createProcess(const std::string& name) {
     Process newProcess(name);
     this->processes.push_back(newProcess);
+    scheduler->addProcess(newProcess);
     newProcess.drawConsole();
 }
 
@@ -38,4 +46,8 @@ void ProcessManager::redrawProcess(const std::string& name) {
         }
         system("cls");
     }
+}
+
+void ProcessManager::listProcess() {
+    scheduler->listProcess();
 }

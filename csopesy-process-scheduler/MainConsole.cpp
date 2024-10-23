@@ -1,12 +1,11 @@
 #include <iostream>
 #include <string>
-#include <thread>
 
 #include "MainConsole.h"
 #include "FCFSScheduler.h"
+#include "ProcessManager.h"
 
 MainConsole::MainConsole() {
-
 }
 
 void MainConsole::printHeading() {
@@ -46,35 +45,85 @@ void MainConsole::readCommand(std::string input) {
     if (input == "initialize") {
         std::cout << "\n  initialize command recognized. Doing something...\n";
         if (!this->isInitialized()) {
-            temp.init();
+            processManager.init();
             initialized = true;
         }
     }
     else if (input.substr(0, 10) == "screen -ls") {
-        temp.listProcess(); 
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
+
+        processManager.listProcess();
     }
     else if (input.substr(0, 9) == "screen -s") {
-        // create a new process screen
-        processManager.createProcess(input.substr(10));
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
+
+        // Validate input length
+        if (input.length() < 11) {
+            std::cout << "Error: No command provided for screen -s.\n";
+            return;
+        }
+
+        std::string screenName = input.substr(10);
+
+        // lazy whitespace check
+        if (screenName.c_str()[0] == ' ') { 
+            std::cout << "Error: No command provided for screen -s.\n";
+            return;
+        }
+
+        processManager.createProcess(screenName);
     }
     else if (input.substr(0, 9) == "screen -r") {
-        // redraw existing process screen
-        processManager.redrawProcess(input.substr(10));
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
+        
+        if (input.length() < 11) {
+            std::cout << "Error: No command provided for screen -s.\n";
+            return;
+        }
+
+        std::string screenName = input.substr(10);
+
+        // lazy whitespace check
+        if (screenName.c_str()[0] == ' ') {
+            std::cout << "Error: No command provided for screen -s.\n";
+            return;
+        }
+
+        processManager.redrawProcess(screenName);
     }
     else if (input == "scheduler-test") {
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
         std::cout << "\n  scheduler-test command recognized. Doing something...\n";
     }
     else if (input == "scheduler-stop") {
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
         std::cout << "\n  scheduler-stop command recognized. Doing something...\n";
     }
     else if (input == "report-util") {
+        if (!this->isInitialized()) {
+            std::cout << "Process scheduler uninitialized. Run initialize first.\n";
+            return;
+        }
         std::cout << "\n  report-util command recognized. Doing something...\n";
     }
     else if (input == "clear") {
         system("cls");
-    }
-    else if (input == "exit") {
-        //std::terminate(SchedulerThread);
+        this->printHeading();
     }
     else {
         std::cout << "\n  '" << input << "' is not recognized as an internal or external command.\n";

@@ -15,5 +15,4 @@ private:
 	bool isExitRaised = false;
 	bool initialized = false;
 	ProcessManager processManager = ProcessManager();
-	FCFSScheduler temp;
 };

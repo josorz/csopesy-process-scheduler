@@ -9,10 +9,12 @@
 class FCFSScheduler : public Scheduler
 {
 public:
+	FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec);
 	~FCFSScheduler();
-	virtual void init();
+	void init() override;
 	virtual void run();
-	virtual void listProcess();
+	void listProcess() override;
+	void addProcess(Process p) override;
 private:
 	// https://stackoverflow.com/questions/5877504/access-c-queue-elements-like-an-array
 	std::deque<Process> readyQueue;

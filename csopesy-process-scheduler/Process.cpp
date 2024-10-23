@@ -31,8 +31,6 @@ Process::Process(std::string name) {
     totalLines = 100;
     creationTime = Utils::getCurrentTimestamp();
     fin = false;
-
-    finishTime = "wala pa";
 }
 
 // display process information on screen
