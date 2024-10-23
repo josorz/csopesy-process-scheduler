@@ -9,7 +9,7 @@ class Scheduler
 public:
 	virtual ~Scheduler() {}
 	virtual void init();
-	void run();
+	virtual void run();
 	void finishProcess(Process p);
 	virtual void listProcess();
 	virtual void addProcess(Process p);

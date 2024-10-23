@@ -15,9 +15,9 @@ FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsig
 
 void FCFSScheduler::run() {
     while (true) {
+        m.lock();
         if (!readyQueue.empty()) {
             // find vacant core
-            m.lock();
             for (auto& core : cores) {
                 if (!core.isActive()) {
 
@@ -34,8 +34,8 @@ void FCFSScheduler::run() {
                     break;
                 }
             }
-            m.unlock();
         }
+        m.unlock();
     }
 }
 
@@ -87,5 +87,7 @@ void FCFSScheduler::listProcess() {
 }
 
 void FCFSScheduler::addProcess(Process p) {
+    m.lock();
     readyQueue.push_back(p);
+    m.unlock();
 }
