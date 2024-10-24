@@ -2,8 +2,9 @@
 #include <sstream>
 
 #include "ProcessManager.h"
-#include "FCFSScheduler.h"
 #include "Scheduler.h"
+#include "FCFSScheduler.h"
+#include "RRScheduler.h"
 
 void ProcessManager::init() {
     int num_cpu;
@@ -87,7 +88,7 @@ void ProcessManager::init() {
         scheduler = new FCFSScheduler(num_cpu, batch_process_freq, min_ins, max_ins, delay_per_exec);
     }
     else if (schedulerType == "rr") {
-        // scheduler == RRScheduler(num_cpu, schedulerType, quantum_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec);
+        scheduler = new RRScheduler(num_cpu, quantum_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec);
     }
     scheduler->init();
     std::thread start_scheduler(&Scheduler::run, scheduler);

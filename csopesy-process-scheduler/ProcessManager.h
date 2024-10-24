@@ -22,4 +22,7 @@ public:
 
     // redraw console for an existing process
     void redrawProcess(const std::string& name);
+
+    void testScheduler();
+    void stopScheduler();
 };

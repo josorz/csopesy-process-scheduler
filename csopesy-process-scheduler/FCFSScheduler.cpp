@@ -2,8 +2,8 @@
 #include "Process.h"
 #include <thread>
 #include <mutex>
+#include <string>
 
-std::mutex m;
 
 FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
@@ -14,6 +14,9 @@ FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsig
 }
 
 void FCFSScheduler::run() {
+    unsigned int cpuCycles = 0;
+    int processCtr = 0;
+    std::string procName = "";
     while (true) {
         m.lock();
         if (!readyQueue.empty()) {
@@ -35,7 +38,24 @@ void FCFSScheduler::run() {
                 }
             }
         }
+
+        // scheduler-test
+        if (isSchedulerOn && cpuCycles == batch_process_freq) {
+            procName = procName + "process";
+            if (processCtr < 10) {
+                procName += "0";
+            }
+            procName += processCtr;
+
+            procName += std::to_string(processCtr);
+
+            readyQueue.push_back(Process(procName));
+            cpuCycles = 0;
+            processCtr++;
+        }
         m.unlock();
+
+        cpuCycles++;
     }
 }
 
@@ -58,10 +78,18 @@ void FCFSScheduler::init() {
 }
 
 void FCFSScheduler::listProcess() {
-    int used_core = 4;
-    int num_cores = 4;
-    int cpu_utilization = (used_core * 100) / num_cores;
-    int cores_available = num_cores - used_core;
+    m.lock();
+
+    int used_core = 0;
+
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            used_core++;
+        }
+    }
+
+    double cpu_utilization = (used_core * 100) / this->num_cpu;
+    int cores_available = this->num_cpu - used_core;
 
     std::cout << "CPU Utilization: " << cpu_utilization << "%\n";
     std::cout << "Cores used: " << used_core << "\n";
@@ -71,11 +99,12 @@ void FCFSScheduler::listProcess() {
     std::cout << "Running processes:\n";
     for (auto& core : cores) {
         if (core.isActive()) {
-            std::cout << core.getProcessName() << "   " << "(" + core.getCreationTime()
+            std::cout << core.getProcessName() << "   " << "(" << core.getCreationTime() << ")"
                 << "     core: " << core.getCore() << "    "
                 << core.getCurrentLine() << "/" << core.getTotalLines() << "\n";
         }
     }
+    m.unlock();
 
     std::cout << "\nFinished processes:\n";
     for (auto process : finished_list) {
@@ -90,4 +119,25 @@ void FCFSScheduler::addProcess(Process p) {
     m.lock();
     readyQueue.push_back(p);
     m.unlock();
+}
+
+Process *FCFSScheduler::findProcess(std::string name) {
+    // get processes from ready queue
+    for (auto& process : readyQueue) {
+        if (process.getName() == name) {
+            return &process;
+        }
+    }
+
+    // get processes from cores
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            if (core.getCurrentProcess()->getName() == name) {
+                Process* p = core.getCurrentProcess();
+                return p;
+            }
+        }
+    }
+
+    return nullptr;
 }
