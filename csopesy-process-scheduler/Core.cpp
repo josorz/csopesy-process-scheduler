@@ -78,7 +78,7 @@ void Core::runRRProcess() {
 		while (!p->isFinished() && timeRun < quantum) {
 			p->increaseCurrent();  // Process does work
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			timeRun += 10;  // Update time run
+			timeRun += 1;  // Update time run
 		}
 
 		z.lock();
