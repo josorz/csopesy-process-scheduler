@@ -12,6 +12,12 @@ Core::Core(int count, Scheduler *s) {
 	scheduler = s;
 }
 
+Core::Core(int count, Scheduler* s, unsigned int quantum) {
+	coreCount = count;
+	scheduler = s;
+	this->quantum = quantum;
+}
+
 int Core::getCore() {
 	return coreCount;
 }
@@ -59,4 +65,37 @@ void Core::runProcess() {
 
 		z.unlock();
 	}
+}
+
+void Core::runRRProcess() {
+	if (process != nullptr && process.get() != nullptr) {
+		this->active = true;
+
+		Process* p = process.get();
+		int timeRun = 0;  // Track time slice progress
+
+		// Run for a time quantum or until finished
+		while (!p->isFinished() && timeRun < quantum) {
+			p->increaseCurrent();  // Process does work
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			timeRun += 10;  // Update time run
+		}
+
+		z.lock();
+
+		if (p->isFinished()) {
+			// If process finished, notify scheduler
+			scheduler->finishProcess(*p);
+			process.reset();
+		}
+		else {
+			// If process not finished, re-add to ready queue for next round
+			scheduler->requeueProcess(*p);
+			process.reset();
+		}
+
+		this->active = false;
+		z.unlock();
+	}
+
 }

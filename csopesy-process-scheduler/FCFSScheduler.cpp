@@ -3,7 +3,6 @@
 #include <thread>
 #include <mutex>
 
-std::mutex m;
 
 FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
