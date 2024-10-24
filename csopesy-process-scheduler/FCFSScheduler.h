@@ -6,6 +6,7 @@
 #include "Scheduler.h"
 #include "Process.h"
 #include "Core.h"
+
 class FCFSScheduler : public Scheduler
 {
 public:
@@ -15,6 +16,7 @@ public:
 	void run() override;
 	void listProcess() override;
 	void addProcess(Process p) override;
+	Process* findProcess(std::string name) override;
 private:
 	// https://stackoverflow.com/questions/5877504/access-c-queue-elements-like-an-array
 	std::deque<Process> readyQueue;

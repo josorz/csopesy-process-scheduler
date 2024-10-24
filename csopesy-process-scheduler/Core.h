@@ -20,6 +20,7 @@ public:
 	// For RR Sched
 	void runRRProcess();
 	void requeue(Process& p);
+	Process* getCurrentProcess();
 private:
 	std::unique_ptr<Process> process = nullptr;
 	Scheduler *scheduler;

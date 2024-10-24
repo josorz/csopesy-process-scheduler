@@ -16,7 +16,6 @@ void Scheduler::listProcess() {
 }
 
 void Scheduler::addProcess(Process p) {
-
 }
 
 void Scheduler::finishProcess(Process p) {

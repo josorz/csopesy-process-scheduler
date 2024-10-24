@@ -39,10 +39,10 @@ void Process::drawConsole() {
     std::string command;
     while (command != "exit") {
         system("cls");
-        std::cout << "\n  --- SCREEN: " << processName << " ---\n";
-        std::cout << "  Process name: " << processName << "\n";
-        std::cout << "  Current Instruction: " << currentLine << '/' << totalLines << "\n";
-        std::cout << "  Created At: " << creationTime << "\n";
+        std::cout << "\n  --- SCREEN: " << this->processName << " ---\n";
+        std::cout << "  Process name: " << this->processName << "\n";
+        std::cout << "  Current Instruction: " << this->currentLine << '/' << this->totalLines << "\n";
+        std::cout << "  Created At: " << this->creationTime << "\n";
         std::cout << "  ---------------------------\n";
 
         std::cout << "\n  Type 'exit' to return back to main menu: ";

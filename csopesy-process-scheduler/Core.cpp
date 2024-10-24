@@ -90,7 +90,7 @@ void Core::runRRProcess() {
 		}
 		else {
 			// If process not finished, re-add to ready queue for next round
-			scheduler->requeueProcess(*p);
+			scheduler->addProcess(*p);
 			process.reset();
 		}
 
@@ -98,4 +98,8 @@ void Core::runRRProcess() {
 		z.unlock();
 	}
 
+}
+
+Process* Core::getCurrentProcess() {
+	return process.get();
 }

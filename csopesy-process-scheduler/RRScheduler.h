@@ -15,6 +15,7 @@ public:
 	void listProcess() override;
 	void addProcess(Process p) override;
 	void requeueProcess(Process &p) override;
+	Process *findProcess(std::string name) override;
 private:
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;

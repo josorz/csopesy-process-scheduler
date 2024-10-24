@@ -2,9 +2,14 @@
 #include <thread>
 #include <string>
 
+#include <vector>
+#include <mutex>
+
 #include "ProcessManager.h"
 #include "FCFSScheduler.h"
 #include "Scheduler.h"
+
+std::mutex ProcessManagerMutex;
 
 ProcessManager::~ProcessManager() {
     delete scheduler;
@@ -20,17 +25,12 @@ void ProcessManager::createProcess(const std::string& name) {
 
 // find a process by name
 Process* ProcessManager::findProcess(const std::string& name) {
-    for (auto& process : this->processes) {
-        if (process.getName() == name) {
-            return &process;
-        }
-    }
-    return nullptr;
+    return scheduler->findProcess(name);
 }
 
 // redraw console for an existing process
 void ProcessManager::redrawProcess(const std::string& name) {
-    if (Process* process = findProcess(name)) {
+    if (Process *process = findProcess(name)) {
         process->drawConsole();
     }
     else {

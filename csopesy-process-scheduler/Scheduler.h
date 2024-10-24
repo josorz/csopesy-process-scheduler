@@ -15,6 +15,9 @@ public:
 	virtual void listProcess();
 	virtual void addProcess(Process p);
 	virtual void requeueProcess(Process& p) {}
+	virtual Process* findProcess(std::string name) {
+		return nullptr;
+	}
 protected:
 	std::vector<Process> finished_list;
 	std::thread schedulerThread;

@@ -2,7 +2,7 @@
 #include "Process.h"
 #include <thread>
 #include <mutex>
-
+#include <vector>
 
 RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
@@ -47,10 +47,9 @@ RRScheduler::~RRScheduler() {
 }
 
 void RRScheduler::init() {
-    int num_cores = 4;
 
     // initialize cores
-    for (int x = 0; x < num_cores; x++) {
+    for (int x = 0; x < num_cpu; x++) {
         cores.push_back(Core(x, this, quantum_cycles));
     }
 
@@ -81,14 +80,16 @@ void RRScheduler::listProcess() {
     std::cout << "Cores available: " << cores_available << "\n";
     std::cout << "--------------------------------------\n";
 
+    m.lock();
     std::cout << "Running processes:\n";
     for (auto& core : cores) {
         if (core.isActive()) {
-            std::cout << core.getProcessName() << "   " << "(" + core.getCreationTime()
+            std::cout << core.getProcessName() << "   " << "(" << core.getCreationTime() << ")"
                 << "     core: " << core.getCore() << "    "
                 << core.getCurrentLine() << "/" << core.getTotalLines() << "\n";
         }
     }
+    m.unlock();
 
     std::cout << "\nFinished processes:\n";
     for (auto process : finished_list) {
@@ -109,4 +110,25 @@ void RRScheduler::requeueProcess(Process &p) {
     m.lock();
     readyQueue.push_back(p);  // Reinsert process at the back of the queue
     m.unlock();
+}
+
+Process *RRScheduler::findProcess(std::string name) {
+    // get processes from ready queue
+    for (auto& process : readyQueue) {
+        if (process.getName() == name) {
+            return &process;
+        }
+    }
+
+    // get processes from cores
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            if (core.getCurrentProcess()->getName() == name) {
+                Process *p = core.getCurrentProcess();
+                return p;
+            }
+        }
+    }
+
+    return nullptr;
 }
