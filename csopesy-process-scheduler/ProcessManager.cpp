@@ -51,3 +51,11 @@ void ProcessManager::redrawProcess(const std::string& name) {
 void ProcessManager::listProcess() {
     scheduler->listProcess();
 }
+
+void ProcessManager::testScheduler() {
+    scheduler->test();
+}
+
+void ProcessManager::stopScheduler() {
+    scheduler->stop();
+}

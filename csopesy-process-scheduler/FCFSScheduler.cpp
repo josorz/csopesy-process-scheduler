@@ -2,6 +2,7 @@
 #include "Process.h"
 #include <thread>
 #include <mutex>
+#include <string>
 
 
 FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
@@ -13,6 +14,9 @@ FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsig
 }
 
 void FCFSScheduler::run() {
+    unsigned int cpuCycles = 0;
+    int processCtr = 0;
+    std::string procName = "";
     while (true) {
         m.lock();
         if (!readyQueue.empty()) {
@@ -34,7 +38,24 @@ void FCFSScheduler::run() {
                 }
             }
         }
+
+        // scheduler-test
+        if (isSchedulerOn && cpuCycles == batch_process_freq) {
+            procName = procName + "process";
+            if (processCtr < 10) {
+                procName += "0";
+            }
+            procName += processCtr;
+
+            procName += std::to_string(processCtr);
+
+            readyQueue.push_back(Process(procName));
+            cpuCycles = 0;
+            processCtr++;
+        }
         m.unlock();
+
+        cpuCycles++;
     }
 }
 

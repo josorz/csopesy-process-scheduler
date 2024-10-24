@@ -105,14 +105,14 @@ void MainConsole::readCommand(std::string input) {
             std::cout << "Process scheduler uninitialized. Run initialize first.\n";
             return;
         }
-        std::cout << "\n  scheduler-test command recognized. Doing something...\n";
+        processManager.testScheduler();
     }
     else if (input == "scheduler-stop") {
         if (!this->isInitialized()) {
             std::cout << "Process scheduler uninitialized. Run initialize first.\n";
             return;
         }
-        std::cout << "\n  scheduler-stop command recognized. Doing something...\n";
+        processManager.stopScheduler();
     }
     else if (input == "report-util") {
         if (!this->isInitialized()) {

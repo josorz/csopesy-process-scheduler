@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <string>
 
 RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
@@ -14,6 +15,9 @@ RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int 
 }
 
 void RRScheduler::run() {
+    unsigned int cpuCycles = 0;
+    int processCtr = 0;
+    std::string procName = "";
     while (true) {
         m.lock();
         if (!readyQueue.empty()) {
@@ -35,7 +39,25 @@ void RRScheduler::run() {
                 }
             }
         }
+        // scheduler-test
+        if (isSchedulerOn && cpuCycles == batch_process_freq) {
+            procName = procName + "process";
+            if (processCtr < 10) {
+                procName += "0";
+            }
+            procName += std::to_string(processCtr);
+
+            readyQueue.push_back(Process(procName));
+            procName = "";
+            cpuCycles = 0;
+            processCtr++;
+        }
         m.unlock();
+
+        if (cpuCycles == batch_process_freq)
+            cpuCycles = 0;
+
+        cpuCycles++;
     }
 }
 
@@ -52,18 +74,6 @@ void RRScheduler::init() {
     for (int x = 0; x < num_cpu; x++) {
         cores.push_back(Core(x, this, quantum_cycles));
     }
-
-    readyQueue.push_back(Process("process01"));
-    readyQueue.push_back(Process("process02"));
-    readyQueue.push_back(Process("process03"));
-    readyQueue.push_back(Process("process04"));
-    readyQueue.push_back(Process("process05"));
-    readyQueue.push_back(Process("process06"));
-    readyQueue.push_back(Process("process07"));
-    readyQueue.push_back(Process("process08"));
-    readyQueue.push_back(Process("process09"));
-    readyQueue.push_back(Process("process10"));
-
 
     // run scheduler thread 
     schedulerThread = std::thread(&RRScheduler::run, this);

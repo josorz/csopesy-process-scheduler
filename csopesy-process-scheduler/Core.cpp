@@ -10,12 +10,14 @@ std::mutex z;
 Core::Core(int count, Scheduler *s) {
 	coreCount = count;
 	scheduler = s;
+	this->delay_per_exec = s->delay_per_exec;
 }
 
 Core::Core(int count, Scheduler* s, unsigned int quantum) {
 	coreCount = count;
 	scheduler = s;
 	this->quantum = quantum;
+	this->delay_per_exec = s->delay_per_exec;
 }
 
 int Core::getCore() {
@@ -55,7 +57,7 @@ void Core::runProcess() {
 
 		while (!p->isFinished()) {
 			p->increaseCurrent();
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_per_exec));
 		}
 		z.lock();
 		scheduler->finishProcess(*p);
@@ -77,7 +79,7 @@ void Core::runRRProcess() {
 		// Run for a time quantum or until finished
 		while (!p->isFinished() && timeRun < quantum) {
 			p->increaseCurrent();  // Process does work
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_per_exec));
 			timeRun += 1;  // Update time run
 		}
 
