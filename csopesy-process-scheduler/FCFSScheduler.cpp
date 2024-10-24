@@ -92,25 +92,22 @@ void FCFSScheduler::addProcess(Process p) {
 }
 
 Process *FCFSScheduler::findProcess(std::string name) {
-    m.lock();
     // get processes from ready queue
     for (auto& process : readyQueue) {
         if (process.getName() == name) {
-            m.unlock();
             return &process;
         }
     }
+
     // get processes from cores
     for (auto& core : cores) {
         if (core.isActive()) {
-            Process* p = core.getCurrentProcess();
-            if (p->getName() == name) {
-                m.unlock();
+            if (core.getCurrentProcess()->getName() == name) {
+                Process* p = core.getCurrentProcess();
                 return p;
             }
         }
     }
-    m.unlock();
 
     return nullptr;
 }
