@@ -57,10 +57,18 @@ void FCFSScheduler::init() {
 }
 
 void FCFSScheduler::listProcess() {
-    int used_core = 4;
-    int num_cores = 4;
-    int cpu_utilization = (used_core * 100) / num_cores;
-    int cores_available = num_cores - used_core;
+    m.lock();
+
+    int used_core = 0;
+
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            used_core++;
+        }
+    }
+
+    double cpu_utilization = (used_core * 100) / this->num_cpu;
+    int cores_available = this->num_cpu - used_core;
 
     std::cout << "CPU Utilization: " << cpu_utilization << "%\n";
     std::cout << "Cores used: " << used_core << "\n";
@@ -70,11 +78,12 @@ void FCFSScheduler::listProcess() {
     std::cout << "Running processes:\n";
     for (auto& core : cores) {
         if (core.isActive()) {
-            std::cout << core.getProcessName() << "   " << "(" + core.getCreationTime()
+            std::cout << core.getProcessName() << "   " << "(" << core.getCreationTime() << ")"
                 << "     core: " << core.getCore() << "    "
                 << core.getCurrentLine() << "/" << core.getTotalLines() << "\n";
         }
     }
+    m.unlock();
 
     std::cout << "\nFinished processes:\n";
     for (auto process : finished_list) {
