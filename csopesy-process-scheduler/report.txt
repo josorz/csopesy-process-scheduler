@@ -1,0 +1,14 @@
+Report generated at: 10/31/2024, 06:33:48 PM
+
+--------------------------------------
+CPU Utilization: 75%
+Cores used: 3
+Cores available: 1
+--------------------------------------
+Running processes:
+process3437   (10/31/2024, 06:33:42 PM)     core: 0    5/100
+process3438   (10/31/2024, 06:33:42 PM)     core: 1    5/100
+process3439   (10/31/2024, 06:33:42 PM)     core: 3    5/100
+
+Finished processes:
+--------------------------------------

@@ -13,6 +13,7 @@ public:
 	void init() override;
 	void run() override;
 	void listProcess() override;
+	void listProcessToFile() override;
 	void addProcess(Process p) override;
 	void requeueProcess(Process &p) override;
 	Process *findProcess(std::string name) override;

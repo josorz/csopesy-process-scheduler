@@ -16,6 +16,7 @@ public:
     
     void init();
     void listProcess();
+    void listProcessToFile();
 
     // find a process by name
     Process* findProcess(const std::string& name);

@@ -15,6 +15,10 @@ void Scheduler::listProcess() {
 
 }
 
+void Scheduler::listProcessToFile() {
+
+}
+
 void Scheduler::addProcess(Process p) {
 }
 

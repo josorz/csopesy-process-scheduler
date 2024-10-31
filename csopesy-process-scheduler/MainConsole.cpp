@@ -106,6 +106,7 @@ void MainConsole::readCommand(std::string input) {
             return;
         }
         processManager.testScheduler();
+        std::cout << "Scheduler test ongoing. Continuously generating dummy processes.\n";
     }
     else if (input == "scheduler-stop") {
         if (!this->isInitialized()) {
@@ -113,13 +114,14 @@ void MainConsole::readCommand(std::string input) {
             return;
         }
         processManager.stopScheduler();
+        std::cout << "Stopped generating dummy processes.\n";
     }
     else if (input == "report-util") {
         if (!this->isInitialized()) {
             std::cout << "Process scheduler uninitialized. Run initialize first.\n";
             return;
         }
-        std::cout << "\n  report-util command recognized. Doing something...\n";
+        processManager.listProcessToFile();
     }
     else if (input == "clear") {
         system("cls");

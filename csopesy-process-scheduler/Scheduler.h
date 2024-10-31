@@ -13,6 +13,7 @@ public:
 	virtual void run();
 	void finishProcess(Process p);
 	virtual void listProcess();
+	virtual void listProcessToFile();
 	virtual void addProcess(Process p);
 	virtual void requeueProcess(Process& p) {}
 	virtual Process* findProcess(std::string name) {

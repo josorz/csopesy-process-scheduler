@@ -4,6 +4,10 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <chrono>
+#include <ctime>
 
 RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
@@ -116,6 +120,71 @@ void RRScheduler::listProcess() {
 
     std::cout << "--------------------------------------\n";
 }
+
+std::string getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm local_tm;
+    localtime_s(&local_tm, &now_c);
+    std::ostringstream oss;
+    oss << std::put_time(&local_tm, "%m/%d/%Y, %I:%M:%S %p");
+    return oss.str();
+}
+
+void RRScheduler::listProcessToFile() {
+    std::ofstream reportFile("report.txt");  // Create a file named "report.txt"
+
+    if (!reportFile.is_open()) {
+        std::cerr << "Error opening report file.\n";
+        return;
+    }
+    m.lock();
+
+    // Write the current timestamp to the file
+    reportFile << "Report generated at: " << getCurrentTimestamp() << "\n\n";
+    reportFile << "--------------------------------------\n\n";
+
+    int used_core = 0;
+
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            used_core++;
+        }
+    }
+
+    double cpu_utilization = (used_core * 100) / this->num_cpu;
+    int cores_available = this->num_cpu - used_core;
+
+    // Write CPU utilization information to the file
+    reportFile << "CPU Utilization: " << cpu_utilization << "%\n";
+    reportFile << "Cores used: " << used_core << "\n";
+    reportFile << "Cores available: " << cores_available << "\n";
+    reportFile << "--------------------------------------\n";
+
+    // Write running processes to the file
+    reportFile << "Running processes:\n";
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            reportFile << core.getProcessName() << "   " << "(" << core.getCreationTime() << ")"
+                << "     core: " << core.getCore() << "    "
+                << core.getCurrentLine() << "/" << core.getTotalLines() << "\n";
+        }
+    }
+    m.unlock();
+
+    // Write finished processes to the file
+    reportFile << "\nFinished processes:\n";
+    for (auto process : finished_list) {
+        reportFile << process.getName() << "   " << process.getFinishTime()
+            << "     Finished    " << process.getCurrentLine() << "/" << process.getTotalLines() << "\n";
+    }
+
+    reportFile << "--------------------------------------\n";
+    reportFile.close();
+
+    std::cout << "Report saved to report.txt\n";
+}
+
 
 void RRScheduler::addProcess(Process p) {
     m.lock();
