@@ -140,7 +140,6 @@ void RRScheduler::listProcessToFile() {
     }
     m.lock();
 
-    // Write the current timestamp to the file
     reportFile << "Report generated at: " << getCurrentTimestamp() << "\n\n";
     reportFile << "--------------------------------------\n\n";
 
@@ -155,13 +154,11 @@ void RRScheduler::listProcessToFile() {
     double cpu_utilization = (used_core * 100) / this->num_cpu;
     int cores_available = this->num_cpu - used_core;
 
-    // Write CPU utilization information to the file
     reportFile << "CPU Utilization: " << cpu_utilization << "%\n";
     reportFile << "Cores used: " << used_core << "\n";
     reportFile << "Cores available: " << cores_available << "\n";
     reportFile << "--------------------------------------\n";
 
-    // Write running processes to the file
     reportFile << "Running processes:\n";
     for (auto& core : cores) {
         if (core.isActive()) {
@@ -172,7 +169,6 @@ void RRScheduler::listProcessToFile() {
     }
     m.unlock();
 
-    // Write finished processes to the file
     reportFile << "\nFinished processes:\n";
     for (auto process : finished_list) {
         reportFile << process.getName() << "   " << process.getFinishTime()

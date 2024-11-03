@@ -34,7 +34,6 @@ void ProcessManager::redrawProcess(const std::string& name) {
         process->drawConsole();
     }
     else {
-        // TODO: replace with proper getline
         std::string command;
         while (command != "exit") {
             system("cls");
