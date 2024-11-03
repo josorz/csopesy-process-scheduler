@@ -41,13 +41,27 @@ bool MainConsole::isInitialized() {
     return this->initialized;
 }
 
+std::string MainConsole::getScreenName(std::string input, std::string command) {
+    if (input.length() <= command.length()) {
+        std::cout << "Error: No process specified for " << command << ".\n";
+        return "";
+    }
+
+    std::string screenName = input.substr(command.length());
+    screenName.erase(0, screenName.find_first_not_of(' '));
+
+    if (screenName.empty()) {
+        std::cout << "Error: No process specified for " << command << ".\n";
+    }
+    return screenName;
+}
+
 void MainConsole::readCommand(std::string input) {
     if (input != "initialize" && !isInitialized()) {
         std::cout << "Process scheduler uninitialized. Run initialize first.\n";
         return;
     }
-
-    if (input == "initialize") {
+    else if (input == "initialize") {
         std::cout << "\n  initialize command recognized. Doing something...\n";
         if (!isInitialized()) {
             processManager.init();
@@ -58,37 +72,16 @@ void MainConsole::readCommand(std::string input) {
         processManager.listProcess();
     }
     else if (input.substr(0, 9) == "screen -s") {
-        // Validate input length
-        if (input.length() < 11) {
-            std::cout << "Error: No command provided for screen -s.\n";
-            return;
+        std::string screenName = getScreenName(input, "screen -s");
+        if (!screenName.empty()) {
+            processManager.createProcess(screenName);
         }
-
-        std::string screenName = input.substr(10);
-
-        // Lazy whitespace check
-        if (screenName.c_str()[0] == ' ') {
-            std::cout << "Error: No command provided for screen -s.\n";
-            return;
-        }
-
-        processManager.createProcess(screenName);
     }
     else if (input.substr(0, 9) == "screen -r") {
-        if (input.length() < 11) {
-            std::cout << "Error: No command provided for screen -r.\n";
-            return;
+        std::string screenName = getScreenName(input, "screen -r");
+        if (!screenName.empty()) {
+            processManager.redrawProcess(screenName);
         }
-
-        std::string screenName = input.substr(10);
-
-        // Lazy whitespace check
-        if (screenName.c_str()[0] == ' ') {
-            std::cout << "Error: No command provided for screen -r.\n";
-            return;
-        }
-
-        processManager.redrawProcess(screenName);
     }
     else if (input == "scheduler-test") {
         processManager.testScheduler();

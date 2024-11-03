@@ -9,6 +9,7 @@ public:
 	~MainConsole() = default;
 	void printHeading();
 	void drawConsole();
+	std::string getScreenName(std::string input, std::string command);
 	void readCommand(std::string input);
 	bool isInitialized();
 private:
