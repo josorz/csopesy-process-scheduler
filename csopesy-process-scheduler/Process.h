@@ -13,7 +13,7 @@ private:
     bool fin;
 
 public:
-    Process(std::string name);
+    Process(std::string name, unsigned int min_ins, unsigned int max_ins);
 
     // Display process information on screen
     void drawConsole();

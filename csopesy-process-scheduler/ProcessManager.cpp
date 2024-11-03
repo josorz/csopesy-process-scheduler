@@ -17,7 +17,7 @@ ProcessManager::~ProcessManager() {
 
 // func to create new process and display its console
 void ProcessManager::createProcess(const std::string& name) {
-    Process newProcess(name);
+    Process newProcess(name, min_ins, max_ins);
     this->processes.push_back(newProcess);
     scheduler->addProcess(newProcess);
     newProcess.drawConsole();

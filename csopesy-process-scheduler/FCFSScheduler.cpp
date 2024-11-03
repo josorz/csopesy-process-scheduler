@@ -52,7 +52,7 @@ void FCFSScheduler::run() {
                 procName += std::to_string(processCtr);
             }
 
-            readyQueue.push_back(Process(procName));
+            readyQueue.push_back(Process(procName, min_ins, max_ins));
 
             procName = "";
             cpuCycles = 0;

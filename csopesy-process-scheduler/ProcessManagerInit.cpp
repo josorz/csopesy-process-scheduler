@@ -84,6 +84,9 @@ void ProcessManager::init() {
     std::cout << "Max Instructions: " << max_ins << std::endl;
     std::cout << "Delay Per Exec: " << delay_per_exec << std::endl;
 
+    this->min_ins = min_ins;
+    this->max_ins = max_ins;
+
     if (schedulerType == "fcfs") {
         scheduler = new FCFSScheduler(num_cpu, batch_process_freq, min_ins, max_ins, delay_per_exec);
     }

@@ -9,6 +9,7 @@ private:
     Scheduler * scheduler;
     std::vector<Process> processes;
     bool isInitialized = false;
+    unsigned int min_ins, max_ins;
 public:
     ~ProcessManager();
     // func to create new process and display its console
