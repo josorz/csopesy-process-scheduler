@@ -22,4 +22,5 @@ private:
 	// https://stackoverflow.com/questions/5877504/access-c-queue-elements-like-an-array
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;
+	unsigned int cpuCycles = 0;
 };

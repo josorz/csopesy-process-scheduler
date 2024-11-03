@@ -22,6 +22,7 @@ public:
 	void test() { this->isSchedulerOn = true; }
 	void stop() { this->isSchedulerOn = false; }
 	unsigned int delay_per_exec;
+	std::string getCurrentTimestamp();
 protected:
 	std::vector<Process> finished_list;
 	std::thread schedulerThread;

@@ -17,7 +17,6 @@ FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsig
 }
 
 void FCFSScheduler::run() {
-    unsigned int cpuCycles = 0;
     int processCtr = 0;
     std::string procName = "";
     while (true) {
@@ -44,21 +43,26 @@ void FCFSScheduler::run() {
 
         // scheduler-test
         if (isSchedulerOn && cpuCycles == batch_process_freq) {
-            procName = procName + "process";
-            if (processCtr < 10) {
-                procName += "0";
-            }
-            procName += processCtr;
+            procName = "process";
 
-            procName += std::to_string(processCtr);
+            if (processCtr < 10) {
+                procName += "0" + std::to_string(processCtr);
+            }
+            else {
+                procName += std::to_string(processCtr);
+            }
 
             readyQueue.push_back(Process(procName));
+
+            procName = "";
             cpuCycles = 0;
             processCtr++;
         }
         m.unlock();
 
-        cpuCycles++;
+        if (isSchedulerOn) {
+            cpuCycles++;
+        }
     }
 }
 
@@ -116,17 +120,6 @@ void FCFSScheduler::listProcess() {
     }
 
     std::cout << "--------------------------------------\n";
-}
-
-
-std::string getCurrentTimestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm local_tm;
-    localtime_s(&local_tm, &now_c);
-    std::ostringstream oss;
-    oss << std::put_time(&local_tm, "%m/%d/%Y, %I:%M:%S %p");
-    return oss.str();
 }
 
 void FCFSScheduler::listProcessToFile() {

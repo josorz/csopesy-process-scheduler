@@ -121,16 +121,6 @@ void RRScheduler::listProcess() {
     std::cout << "--------------------------------------\n";
 }
 
-std::string getCurrentTimestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm local_tm;
-    localtime_s(&local_tm, &now_c);
-    std::ostringstream oss;
-    oss << std::put_time(&local_tm, "%m/%d/%Y, %I:%M:%S %p");
-    return oss.str();
-}
-
 void RRScheduler::listProcessToFile() {
     std::ofstream reportFile("report.txt");  // Create a file named "report.txt"
 
