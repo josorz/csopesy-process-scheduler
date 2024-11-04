@@ -5,6 +5,9 @@
 #include <thread>
 #include <mutex>
 // Utility Functions
+
+int Process::processCounter = 0;
+
 namespace Utils {
     // used for now
     int generateRandomNumber(int lower, int upper) {
@@ -32,6 +35,8 @@ Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins) {
     totalLines = rand() % (max_ins - min_ins + 1) + min_ins;
     creationTime = Utils::getCurrentTimestamp();
     fin = false;
+
+    id = ++processCounter;
 }
 
 // display process information on screen
@@ -42,7 +47,7 @@ void Process::drawConsole() {
         system("cls");
         std::cout << "\n  --- SCREEN: " << " ---\n";
         std::cout << "  Process: " << getName() << "\n";
-        std::cout << "  ID: " << getName() << "\n\n"; // change this to process ID
+        std::cout << "  ID: " << getID() << "\n\n"; // change this to process ID
         if (getCurrentLine() >= getTotalLines()) {
             std::cout << "  Finished!\n";
         }

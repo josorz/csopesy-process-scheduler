@@ -5,6 +5,7 @@
 class Process {
 private:
     std::string processName;
+    int id;
     int core;
     int currentLine;
     int totalLines;
@@ -12,12 +13,15 @@ private:
     std::string finishTime;
     bool fin;
 
+    static int processCounter; // consider changing, static/global var = bad
+
 public:
     Process(std::string name, unsigned int min_ins, unsigned int max_ins);
 
     // Display process information on screen
     void drawConsole();
 
+    int getID() const { return id; }
     const std::string& getName() const { return processName; }
     int getCore() const { return core; }
     void setCore(int newCore) { core = newCore; }
