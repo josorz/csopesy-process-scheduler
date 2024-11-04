@@ -1,3 +1,4 @@
-# csopesy-process-scheduler
+# Process Scheduler
+ [Technical Report](https://docs.google.com/presentation/d/1THMagrvYrOrpNObwD1vqLLimC7nGV9PkqoAEOFuANyM/edit#slide=id.p1)
 
- [gdrive link for ppt with video](https://drive.google.com/drive/folders/1wDy-xcqqR0mHKGrXhaA1r0KUULJjEJMT?usp=drive_link)
+Entry file is main.cpp
