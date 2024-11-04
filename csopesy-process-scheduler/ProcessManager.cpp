@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <string>
-
+#include <algorithm>
 #include <vector>
 
 #include "ProcessManager.h"
@@ -20,11 +20,20 @@ Process* ProcessManager::findProcess(const std::string& name) {
 }
 
 // func to create new process and display its console
-void ProcessManager::createProcess(const std::string& name) {
+void ProcessManager::createProcess(const std::string& baseName) {
+    std::string name = baseName;
+    int suffix = 1;
+
+    // check for duplicate process name & rename accordingly
+    while (std::any_of(processes.begin(), processes.end(), [&](const Process& p) {
+        return p.getName() == name;
+        })) {
+        name = baseName + " (" + std::to_string(suffix++) + ")";
+    }
+
     Process newProcess(name, min_ins, max_ins);
     this->processes.push_back(newProcess);
     scheduler->addProcess(newProcess);
-
     Process* process = &this->processes.back();
 
     std::string command;
