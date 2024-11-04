@@ -10,6 +10,11 @@
 #include <ctime>
 #include <sstream>
 
+#include "CPUTick.h"
+
+int processCtr = 0;
+std::string procName = "";
+
 RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
     this->quantum_cycles = quantum_cycles;
@@ -20,9 +25,6 @@ RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int 
 }
 
 void RRScheduler::run() {
-    unsigned int cpuCycles = 0;
-    int processCtr = 0;
-    std::string procName = "";
     while (true) {
         m.lock();
         if (!readyQueue.empty()) {
@@ -44,25 +46,10 @@ void RRScheduler::run() {
                 }
             }
         }
-        // scheduler-test
-        if (isSchedulerOn && cpuCycles == batch_process_freq) {
-            procName = procName + "process";
-            if (processCtr < 10) {
-                procName += "0";
-            }
-            procName += std::to_string(processCtr);
 
-            readyQueue.push_back(Process(procName, min_ins, max_ins));
-            procName = "";
-            cpuCycles = 0;
-            processCtr++;
-        }
+        scheduler_test();
         m.unlock();
-
-        if (cpuCycles == batch_process_freq)
-            cpuCycles = 0;
-
-        cpuCycles++;
+        CPUTick::getInstance().addTick();
     }
 }
 
@@ -205,4 +192,34 @@ Process *RRScheduler::findProcess(std::string name) {
     }
 
     return nullptr;
+}
+
+void RRScheduler::stop() {
+    m.lock();
+    std::cout << "num is " << readyQueue.size() << " " << readyQueue.max_size();
+    isSchedulerOn = false;
+    m.unlock();
+}
+
+void RRScheduler::scheduler_test() {
+    unsigned int tick = CPUTick::getInstance().getTick();
+
+    if (!isSchedulerOn) return;
+
+    // scheduler-test
+    if (isSchedulerOn && tick % batch_process_freq == 0) {
+        procName = "process";
+
+        if (processCtr < 10) {
+            procName += "0" + std::to_string(processCtr);
+        }
+        else {
+            procName += std::to_string(processCtr);
+        }
+
+        readyQueue.push_back(Process(procName, min_ins, max_ins));
+
+        procName = "";
+        processCtr++;
+    }
 }

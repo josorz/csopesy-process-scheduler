@@ -7,6 +7,10 @@
 #include <iostream>
 #include <chrono>
 #include <ctime>
+#include <deque>
+
+#include "CPUTick.h"
+
 
 FCFSScheduler::FCFSScheduler(int num_cpu, 
     unsigned int batch_process_freq, 
@@ -21,14 +25,12 @@ FCFSScheduler::FCFSScheduler(int num_cpu,
 
 void FCFSScheduler::run() {
     int processCtr = 0;
-    std::string procName = "";
     while (true) {
         m.lock();
         if (!readyQueue.empty()) {
             // find vacant core
             for (auto& core : cores) {
                 if (!core.isActive()) {
-
                     // remove
                     Process front = readyQueue.front();
                     core.setProcess(front);
@@ -42,29 +44,40 @@ void FCFSScheduler::run() {
                 }
             }
         }
-
-        // scheduler-test
-        if (isSchedulerOn && cpuCycles == batch_process_freq) {
-            procName = "process";
-
-            if (processCtr < 10) {
-                procName += "0" + std::to_string(processCtr);
-            }
-            else {
-                procName += std::to_string(processCtr);
-            }
-
-            readyQueue.push_back(Process(procName, min_ins, max_ins));
-
-            procName = "";
-            cpuCycles = 0;
-            processCtr++;
-        }
         m.unlock();
 
-        if (isSchedulerOn) {
-            cpuCycles++;
+        m.lock();
+        scheduler_test();
+
+        m.unlock();
+
+        CPUTick::getInstance().addTick();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
+    }
+}
+
+void FCFSScheduler::scheduler_test() {
+    unsigned int tick = CPUTick::getInstance().getTick();
+
+    if (!isSchedulerOn) return;
+
+    // scheduler-test
+    if (isSchedulerOn && tick % batch_process_freq == 0) {
+        procName = "process";
+
+        if (processCtr < 10) {
+            procName += "0" + std::to_string(processCtr);
         }
+        else {
+            procName += std::to_string(processCtr);
+        }
+
+        readyQueue.push_back(Process(procName, min_ins, max_ins));
+
+        procName = "";
+        cpuCycles = 0;
+        processCtr++;
     }
 }
 
@@ -99,6 +112,8 @@ void FCFSScheduler::listProcess() {
 
     double cpu_utilization = (used_core * 100) / this->num_cpu;
     int cores_available = this->num_cpu - used_core;
+
+    std::cout << "num " + finished_list.size();
 
     std::cout << "CPU Utilization: " << cpu_utilization << "%\n";
     std::cout << "Cores used: " << used_core << "\n";
@@ -199,4 +214,11 @@ Process *FCFSScheduler::findProcess(std::string name) {
     }
 
     return nullptr;
+}
+
+void FCFSScheduler::stop() {
+    isSchedulerOn = false;
+
+    readyQueue = std::deque<Process>();
+    processCtr = finished_list.size();
 }

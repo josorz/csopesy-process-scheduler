@@ -16,9 +16,13 @@ public:
 	void listProcessToFile() override;
 	void addProcess(Process p) override;
 	void requeueProcess(Process &p) override;
+	void stop() override;
+	void scheduler_test();
 	Process *findProcess(std::string name) override;
 private:
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;
+	int processCtr = 0;
+	std::string procName = "";
 };
 

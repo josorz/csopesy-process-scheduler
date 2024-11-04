@@ -29,6 +29,5 @@ private:
 	bool active = false;
 	bool isFinished();
 	unsigned int delay_per_exec;
-
 };
 
