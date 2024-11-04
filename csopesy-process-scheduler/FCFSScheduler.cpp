@@ -124,12 +124,13 @@ void FCFSScheduler::listProcess() {
     }
     m.unlock();
 
-    std::cout << "\nFinished processes:\n";
-    for (auto process : finished_list) {
-        std::cout << process.getName() << "   " << process.getFinishTime()
-            << "     Finished    " << process.getCurrentLine() << "/" << process.getTotalLines() << "\n";
+    std::ostringstream oss;
+    oss << "Finished processes:\n";
+    for (const auto& process : finished_list) {
+        oss << process.getName() << "   " << process.getFinishTime()
+            << "     Finished     " << process.getCurrentLine() << "/" << process.getTotalLines() << "\n";
     }
-
+    std::cout << oss.str();
     std::cout << "--------------------------------------\n";
 }
 
@@ -142,7 +143,7 @@ void FCFSScheduler::listProcessToFile() {
     }
     m.lock();
 
-    reportFile << "Report generated at: " << getCurrentTimestamp() << "\n\n";
+    reportFile << "Report generated on: " << getCurrentTimestamp() << "\n\n";
     reportFile << "--------------------------------------\n\n";
 
     int used_core = 0;
