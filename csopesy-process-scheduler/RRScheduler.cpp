@@ -210,6 +210,13 @@ Process *RRScheduler::findProcess(std::string name) {
         }
     }
 
+    // Get finished processes
+    for (const auto& process : finished_list) {
+        if (process.getName() == name) {
+            return const_cast<Process*>(&process); // Cast away constness to return a Process pointer
+        }
+    }
+
     return nullptr;
 }
 
