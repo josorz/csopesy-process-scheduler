@@ -20,7 +20,7 @@ public:
 		return nullptr;
 	}
 	void test() { this->isSchedulerOn = true; }
-	void stop() { this->isSchedulerOn = false; }
+	virtual void stop() {};
 	unsigned int delay_per_exec;
 	std::string getCurrentTimestamp();
 protected:

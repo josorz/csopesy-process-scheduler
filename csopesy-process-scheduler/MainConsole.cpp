@@ -5,6 +5,8 @@
 #include "FCFSScheduler.h"
 #include "ProcessManager.h"
 
+unsigned int cpuCycles = 0;
+
 MainConsole::MainConsole() {
 }
 

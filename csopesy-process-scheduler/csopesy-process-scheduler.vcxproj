@@ -140,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core.h" />
+    <ClInclude Include="CPUTick.h" />
     <ClInclude Include="FCFSScheduler.h" />
     <ClInclude Include="MainConsole.h" />
     <ClInclude Include="Process.h" />
