@@ -15,17 +15,28 @@ ProcessManager::~ProcessManager() {
     delete scheduler;
 }
 
+// find a process by name
+Process* ProcessManager::findProcess(const std::string& name) {
+    return scheduler->findProcess(name);
+}
+
 // func to create new process and display its console
 void ProcessManager::createProcess(const std::string& name) {
     Process newProcess(name, min_ins, max_ins);
     this->processes.push_back(newProcess);
     scheduler->addProcess(newProcess);
-    newProcess.drawConsole();
-}
 
-// find a process by name
-Process* ProcessManager::findProcess(const std::string& name) {
-    return scheduler->findProcess(name);
+    Process* process = &this->processes.back();
+
+    std::string command;
+    std::cout << "\n  Process '" << name << "' successfully created!\n";
+    std::cout << "\n  Type 'process-smi' to see more information about this process: ";
+    std::cout << "\n  Type 'exit' to return back to main menu: ";
+    std::getline(std::cin, command);
+
+    if (command != "exit") {
+        redrawProcess(name);
+    }
 }
 
 // redraw console for an existing process

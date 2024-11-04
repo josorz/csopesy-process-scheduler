@@ -2,7 +2,7 @@
 #include <chrono>
 #include <ctime>
 #include "Process.h"
-
+#include <thread>
 // Utility Functions
 namespace Utils {
     // used for now
@@ -41,13 +41,18 @@ void Process::drawConsole() {
         system("cls");
         std::cout << "\n  --- SCREEN: " << this->processName << " ---\n";
         std::cout << "  Process name: " << this->processName << "\n";
-        std::cout << "  Current Instruction: " << this->currentLine << '/' 
+        std::cout << "  Current Instruction: " << this->currentLine << '/'
             << this->totalLines << "\n";
         std::cout << "  Created At: " << this->creationTime << "\n";
         std::cout << "  ---------------------------\n";
 
+        if (this->currentLine >= this->totalLines) {
+            std::cout << "  Finished!\n";
+        }
+
         std::cout << "\n  Type 'exit' to return back to main menu: ";
         std::getline(std::cin, command);
+
     }
     system("cls");
 }
