@@ -11,7 +11,6 @@
 
 #include "CPUTick.h"
 
-
 FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
     this->batch_process_freq = batch_process_freq;
@@ -49,8 +48,6 @@ void FCFSScheduler::run() {
         m.unlock();
 
         CPUTick::getInstance().addTick();
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
     }
 }
 

@@ -26,11 +26,13 @@ RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int 
 void RRScheduler::run() {
     while (true) {
         m.lock();
-        if (!readyQueue.empty()) {
-            // find vacant core
-            for (auto& core : cores) {
-                if (!core.isActive()) {
-                    // remove process from queue
+        // Check if there are processes in either the readyQueue or rrQueue
+        for (auto& core : cores) {
+            if (!core.isActive()) {  // If core is inactive, we can assign a new process
+
+                // Check for a process in the readyQueue first
+                if (!readyQueue.empty()) {
+                    // Remove process from the readyQueue
                     Process front = readyQueue.front();
                     readyQueue.pop_front();
 
@@ -39,13 +41,28 @@ void RRScheduler::run() {
 
                     // Run the process for a time quantum
                     std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach();
+                    RRThread.detach(); // Detach the thread to allow it to run independently
 
-                    break;
+                    break; // Exit after assigning a process to one core
+                }
+
+                // If no process was taken from readyQueue, check rrQueue
+                if (!rrQueue.empty()) {
+                    // Remove process from the rrQueue
+                    Process front = rrQueue.front();
+                    rrQueue.pop_front();
+
+                    // Assign process to the core
+                    core.setProcess(front);
+
+                    // Run the process for a time quantum
+                    std::thread RRThread(&Core::runRRProcess, &core);
+                    RRThread.detach(); // Detach the thread to allow it to run independently
+
+                    break; // Exit after assigning a process to one core
                 }
             }
         }
-
         scheduler_test();
         m.unlock();
         CPUTick::getInstance().addTick();
@@ -73,6 +90,8 @@ void RRScheduler::init() {
 void RRScheduler::listProcess() {
     m.lock();
 
+    std::cout << "num is " << rrQueue.size() << " " << readyQueue.max_size();
+
     int used_core = 0;
 
     for (auto& core : cores) {
@@ -98,6 +117,8 @@ void RRScheduler::listProcess() {
         }
     }
     m.unlock();
+
+    std::cout << rrQueue.size();
 
     std::cout << "\nFinished processes:\n";
     for (auto process : finished_list) {
@@ -167,7 +188,7 @@ void RRScheduler::addProcess(Process p) {
 
 void RRScheduler::requeueProcess(Process &p) {
     m.lock();
-    readyQueue.push_back(p);  // Reinsert process at the back of the queue
+    rrQueue.push_back(p);  // Reinsert process at the back of the queue
     m.unlock();
 }
 
@@ -194,8 +215,8 @@ Process *RRScheduler::findProcess(std::string name) {
 
 void RRScheduler::stop() {
     m.lock();
-    std::cout << "num is " << readyQueue.size() << " " << readyQueue.max_size();
     isSchedulerOn = false;
+    readyQueue = std::deque<Process>();
     m.unlock();
 }
 

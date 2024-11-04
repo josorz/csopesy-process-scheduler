@@ -132,7 +132,7 @@ void Core::runRRProcess() {
 		}
 		else {
 			// If process not finished, re-add to ready queue for next round
-			scheduler->addProcess(*p);
+			scheduler->requeueProcess(*p);
 			process.reset();
 		}
 
