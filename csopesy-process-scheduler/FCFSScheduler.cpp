@@ -8,7 +8,10 @@
 #include <chrono>
 #include <ctime>
 
-FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
+FCFSScheduler::FCFSScheduler(int num_cpu, 
+    unsigned int batch_process_freq, 
+    unsigned int min_ins, unsigned int max_ins, 
+    unsigned int delay_per_exec) : Scheduler() {
     this->num_cpu = num_cpu;
     this->batch_process_freq = batch_process_freq;
     this->min_ins = min_ins;
@@ -130,7 +133,7 @@ void FCFSScheduler::listProcessToFile() {
     }
     m.lock();
 
-    reportFile << "Report generated at: " << getCurrentTimestamp() << "\n\n";
+    reportFile << "Report generated on: " << getCurrentTimestamp() << "\n\n";
     reportFile << "--------------------------------------\n\n";
 
     int used_core = 0;

@@ -130,7 +130,7 @@ void RRScheduler::listProcessToFile() {
     }
     m.lock();
 
-    reportFile << "Report generated at: " << getCurrentTimestamp() << "\n\n";
+    reportFile << "Report generated on: " << getCurrentTimestamp() << "\n\n";
     reportFile << "--------------------------------------\n\n";
 
     int used_core = 0;
