@@ -22,6 +22,7 @@ public:
 	void scheduler_test();
 	Process *findProcess(std::string name) override;
 private:
+	std::deque<Process> rrQueue;
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;
 	int processCtr = 0;
