@@ -7,7 +7,7 @@
 namespace Utils {
     // used for now
     int generateRandomNumber(int lower, int upper) {
-        srand(time(0));
+        srand(time(NULL));
         return rand() % (upper - lower + 1) + lower;
     }
 
@@ -28,7 +28,7 @@ Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins) {
     processName = name;
     core = -1;
     currentLine = 0;
-    totalLines = Utils::generateRandomNumber(min_ins, max_ins);
+    totalLines = rand() % (max_ins - min_ins + 1) + min_ins;
     creationTime = Utils::getCurrentTimestamp();
     fin = false;
 }

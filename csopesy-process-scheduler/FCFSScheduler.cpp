@@ -30,7 +30,6 @@ void FCFSScheduler::run() {
                     Process front = readyQueue.front();
                     core.setProcess(front);
                     // Run
-
                     std::thread FCFSThread(&Core::runProcess, &core);
                     FCFSThread.detach();
 
