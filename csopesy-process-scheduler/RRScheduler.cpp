@@ -91,10 +91,7 @@ void RRScheduler::init() {
 void RRScheduler::listProcess() {
     m.lock();
 
-    std::cout << "num is " << rrQueue.size() << " " << readyQueue.max_size();
-
     int used_core = 0;
-
     for (auto& core : cores) {
         if (core.isActive()) {
             used_core++;

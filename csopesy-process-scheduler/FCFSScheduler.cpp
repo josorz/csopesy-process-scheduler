@@ -107,8 +107,6 @@ void FCFSScheduler::listProcess() {
     double cpu_utilization = (used_core * 100) / this->num_cpu;
     int cores_available = this->num_cpu - used_core;
 
-    std::cout << "num " + finished_list.size();
-
     std::cout << "CPU Utilization: " << cpu_utilization << "%\n";
     std::cout << "Cores used: " << used_core << "\n";
     std::cout << "Cores available: " << cores_available << "\n";
