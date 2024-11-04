@@ -3,6 +3,7 @@
 #include <ctime>
 #include "Process.h"
 #include <thread>
+#include <mutex>
 // Utility Functions
 namespace Utils {
     // used for now
@@ -35,24 +36,33 @@ Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins) {
 
 // display process information on screen
 void Process::drawConsole() {
-    // TODO: replace with proper getline
-    std::string command;
-    while (command != "exit") {
+
+    std::string command = "process-smi";
+    while (command == "process-smi") {
         system("cls");
-        std::cout << "\n  --- SCREEN: " << this->processName << " ---\n";
-        std::cout << "  Process name: " << this->processName << "\n";
-        std::cout << "  Current Instruction: " << this->currentLine << '/'
-            << this->totalLines << "\n";
-        std::cout << "  Created At: " << this->creationTime << "\n";
+        std::cout << "\n  --- SCREEN: " << " ---\n";
+        std::cout << "  Process: " << getName() << "\n";
+        std::cout << "  ID: " << getName() << "\n\n"; // change this to process ID
+        if (getCurrentLine() >= getTotalLines()) {
+            std::cout << "  Finished!\n";
+        }
+        else {
+            std::cout << "  Current Instruction line: " << getCurrentLine() << "\n";
+            std::cout << "  Lines of code: " << getTotalLines() << "\n";
+        }
         std::cout << "  ---------------------------\n";
 
-        if (this->currentLine >= this->totalLines) {
+        if (getCurrentLine() >= getTotalLines()) {
             std::cout << "  Finished!\n";
         }
 
+        std::cout << "\n  Type 'process-smi' to view more information on this process: ";
         std::cout << "\n  Type 'exit' to return back to main menu: ";
         std::getline(std::cin, command);
-
+        if (command != "exit" && command != "process-smi") {
+            std::cout << "\n  Invalid input. Press enter to return to main menu: \n";
+            std::cin.ignore();
+        }
     }
     system("cls");
 }
