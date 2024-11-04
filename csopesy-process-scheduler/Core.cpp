@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "FCFSScheduler.h"
+#include "CPUTick.h"
 
 #include <mutex>
 
@@ -54,11 +55,32 @@ void Core::runProcess() {
 		this->active = true;
 
 		Process* p = process.get();
+		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
 
 		while (!p->isFinished()) {
-			p->increaseCurrent();
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_per_exec));
+			z.lock();
+
+			unsigned int current_tick = CPUTick::getInstance().getTick();
+
+			// Check if we have wrapped around
+			if (current_tick >= local_cpu_ctr) {
+				// Normal case
+				if (current_tick - local_cpu_ctr >= delay_per_exec) {
+					p->increaseCurrent();
+					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
+				}
+			}
+			else {
+				// Overflow case
+				if ((UINT_MAX - local_cpu_ctr + current_tick + 1) >= delay_per_exec) {
+					p->increaseCurrent();
+					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
+				}
+			}
+
+			z.unlock();
 		}
+
 		z.lock();
 		scheduler->finishProcess(*p);
 
@@ -77,10 +99,28 @@ void Core::runRRProcess() {
 		int timeRun = 0;  // Track time slice progress
 
 		// Run for a time quantum or until finished
+		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
+
 		while (!p->isFinished() && timeRun < quantum) {
-			p->increaseCurrent();  // Process does work
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_per_exec));
-			timeRun += 1;  // Update time run
+			unsigned int current_tick = CPUTick::getInstance().getTick();
+
+			// Check if we have wrapped around
+			if (current_tick >= local_cpu_ctr) {
+				// Normal case
+				if (current_tick - local_cpu_ctr >= delay_per_exec) {
+					p->increaseCurrent();
+					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
+					timeRun++;
+				}
+			}
+			else {
+				// Overflow case
+				if ((UINT_MAX - local_cpu_ctr + current_tick + 1) >= delay_per_exec) {
+					p->increaseCurrent();
+					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
+					timeRun++;
+				}
+			}
 		}
 
 		z.lock();

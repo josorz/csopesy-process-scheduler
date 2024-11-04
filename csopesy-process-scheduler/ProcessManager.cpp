@@ -74,7 +74,6 @@ void ProcessManager::listProcessToFile() {
     scheduler->listProcessToFile();
 }
 
-
 void ProcessManager::testScheduler() {
     scheduler->test();
 }

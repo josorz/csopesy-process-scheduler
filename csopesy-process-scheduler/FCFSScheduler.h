@@ -17,10 +17,14 @@ public:
 	void listProcess() override;
 	void listProcessToFile() override;
 	void addProcess(Process p) override;
+	void stop() override;
 	Process* findProcess(std::string name) override;
+	void scheduler_test();
 private:
 	// https://stackoverflow.com/questions/5877504/access-c-queue-elements-like-an-array
 	std::deque<Process> readyQueue;
 	std::vector<Core> cores;
 	unsigned int cpuCycles = 0;
+	int processCtr = 0;
+	std::string procName = "";
 };
