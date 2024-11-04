@@ -52,8 +52,6 @@ void FCFSScheduler::run() {
         m.unlock();
 
         CPUTick::getInstance().addTick();
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec));
     }
 }
 
@@ -134,7 +132,8 @@ void FCFSScheduler::listProcess() {
     oss << "Finished processes:\n";
     for (const auto& process : finished_list) {
         oss << process.getName() << "   " << process.getFinishTime()
-            << "     Finished     " << process.getCurrentLine() << "/" << process.getTotalLines() << "\n";
+            << "     Finished     " << process.getCurrentLine() << "/" << 
+process.getTotalLines() << "\n";
     }
     std::cout << oss.str();
     std::cout << "--------------------------------------\n";
@@ -195,25 +194,31 @@ void FCFSScheduler::addProcess(Process p) {
     m.unlock();
 }
 
-Process *FCFSScheduler::findProcess(std::string name) {
-    // get processes from ready queue
+Process* FCFSScheduler::findProcess(std::string name) {
+    // Get processes from ready queue
     for (auto& process : readyQueue) {
         if (process.getName() == name) {
             return &process;
         }
     }
 
-    // get processes from cores
+    // Get processes from cores
     for (auto& core : cores) {
         if (core.isActive()) {
             if (core.getCurrentProcess()->getName() == name) {
-                Process* p = core.getCurrentProcess();
-                return p;
+                return core.getCurrentProcess();
             }
         }
     }
 
-    return nullptr;
+    // Get finished processes
+    for (const auto& process : finished_list) {
+        if (process.getName() == name) {
+            return const_cast<Process*>(&process); // Cast away constness to return a Process pointer
+        }
+    }
+
+    return nullptr; // Return nullptr if no matching process found
 }
 
 void FCFSScheduler::stop() {

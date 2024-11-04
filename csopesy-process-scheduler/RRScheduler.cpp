@@ -196,7 +196,6 @@ Process *RRScheduler::findProcess(std::string name) {
 
 void RRScheduler::stop() {
     m.lock();
-    std::cout << "num is " << readyQueue.size() << " " << readyQueue.max_size();
     isSchedulerOn = false;
     m.unlock();
 }

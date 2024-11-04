@@ -57,10 +57,6 @@ void Process::drawConsole() {
         }
         std::cout << "  ---------------------------\n";
 
-        if (getCurrentLine() >= getTotalLines()) {
-            std::cout << "  Finished!\n";
-        }
-
         std::cout << "\n  Type 'process-smi' to view more information on this process: ";
         std::cout << "\n  Type 'exit' to return back to main menu: ";
         std::getline(std::cin, command);
