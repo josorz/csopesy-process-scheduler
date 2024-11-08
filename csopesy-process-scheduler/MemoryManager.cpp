@@ -23,7 +23,7 @@ bool FirstFitMemoryManager::allocateMemory(const std::string& processName) {
         if (it->size >= memPerProc) {
             // allocate memory from this block
             allocList.emplace_back(it->start, memPerProc, processName);
-            std::cout << "Allocated " << memPerProc << " bytes to process " << processName << " at address " << it->start << "\n";
+            //std::cout << "Allocated " << memPerProc << " bytes to process " << processName << " at address " << it->start << "\n"; //debug
             it->start += memPerProc;
             it->size -= memPerProc;
 
