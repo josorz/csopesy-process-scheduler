@@ -25,6 +25,8 @@ RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int 
 }
 
 void RRScheduler::run() {
+    int cycleCounter = 0;  // Add a counter to track cycles
+
     while (true) {
         m.lock();
         // Check if there are processes in either the readyQueue or rrQueue
@@ -33,42 +35,65 @@ void RRScheduler::run() {
 
                 // Check for a process in the readyQueue first
                 if (!readyQueue.empty()) {
-                    // Remove process from the readyQueue
                     Process front = readyQueue.front();
                     readyQueue.pop_front();
 
-                    // Assign process to the core
-                    core.setProcess(front);
+                    // Attempt to allocate memory using first-fit
+                    if (memoryManager.allocateMemory(front.getName())) {
+                        // Memory allocated successfully, assign process to core
+                        core.setProcess(front);
 
-                    // Run the process for a time quantum
-                    std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach(); // Detach the thread to allow it to run independently
+                        // Run the process for a time quantum
+                        std::thread RRThread(&Core::runRRProcess, &core);
+                        RRThread.detach(); // Detach the thread to allow it to run independently
+                    }
+                    else {
+                        // If memory allocation fails, requeue the process at the end
+                        readyQueue.push_back(front);
+                    }
 
-                    break; // Exit after assigning a process to one core
+                    break; // Exit after attempting to assign a process to one core
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
                 if (!rrQueue.empty()) {
-                    // Remove process from the rrQueue
                     Process front = rrQueue.front();
                     rrQueue.pop_front();
 
-                    // Assign process to the core
-                    core.setProcess(front);
+                    // Attempt to allocate memory using first-fit
+                    if (memoryManager.allocateMemory(front.getName())) {
+                        // Memory allocated successfully, assign process to core
+                        core.setProcess(front);
 
-                    // Run the process for a time quantum
-                    std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach(); // Detach the thread to allow it to run independently
+                        // Run the process for a time quantum
+                        std::thread RRThread(&Core::runRRProcess, &core);
+                        RRThread.detach(); // Detach the thread to allow it to run independently
+                    }
+                    else {
+                        // If memory allocation fails, requeue the process at the end
+                        rrQueue.push_back(front);
+                    }
 
-                    break; // Exit after assigning a process to one core
+                    break; // Exit after attempting to assign a process to one core
                 }
             }
         }
         scheduler_test();
         m.unlock();
+
+        // Increment the cycle counter
+        cycleCounter++;
+
+        // Generate memory snapshot every `quantum_cycles`
+        if (cycleCounter % quantum_cycles == 0) {
+            int currentQuantumCount = cycleCounter;
+            memoryManager.generateMemorySnapshot(currentQuantumCount, getCurrentTimestamp());
+        }
+
         CPUTick::getInstance().addTick();
     }
 }
+
 
 
 RRScheduler::~RRScheduler() {

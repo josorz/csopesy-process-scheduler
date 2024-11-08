@@ -132,6 +132,7 @@
     <ClCompile Include="FCFSScheduler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainConsole.cpp" />
+    <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
     <ClCompile Include="ProcessManagerInit.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="CPUTick.h" />
     <ClInclude Include="FCFSScheduler.h" />
     <ClInclude Include="MainConsole.h" />
+    <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="RRScheduler.h" />

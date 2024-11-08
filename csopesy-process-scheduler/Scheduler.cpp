@@ -26,10 +26,13 @@ void Scheduler::addProcess(Process p) {
 }
 
 void Scheduler::finishProcess(Process p) {
-	zz.lock();
-	p.setFinishTime();
-	finished_list.push_back(p);
-	zz.unlock();
+    std::lock_guard<std::mutex> lock(zz);  
+    p.setFinishTime();
+    finished_list.push_back(p);
+    memoryManager.freeMemory(p.getName());  // Free memory for the completed process
+
+    // debug
+    //std::cout << "Process " << p.getName() << " finished and added to finished_list.\n";
 }
 
 std::string Scheduler::getCurrentTimestamp() {
