@@ -21,7 +21,6 @@ namespace Colors {
 }
 
 namespace Utils {
-    void printAscii();
     void printConfirmation(const string& command);
     void printHeader();
 }

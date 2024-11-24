@@ -4,15 +4,6 @@
 #include <algorithm>
 #include "utils.h"
 
-void Utils::printAscii() {
-    std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
-    std::cout << " / ____| / ____| / __ \\ |  __ \\ |  ____| / ____|\\ \\   / /\n";
-    std::cout << "| |     | (___  | |  | || |__) || |__   | (___   \\ \\_/ / \n";
-    std::cout << "| |      \\___ \\ | |  | ||  ___/ |  __|   \\___ \\   \\   /  \n";
-    std::cout << "| |____  ____) || |__| || |     | |____  ____) |   | |   \n";
-    std::cout << " \\_____||_____/  \\____/ |_|     |______||_____/    |_|   \n";
-}
-
 void Utils::printConfirmation(const string& command) {
     cout << Colors::Green << "\n  " << command << " command recognized. Doing something. . ." << Colors::White;
     Sleep(1000);
