@@ -1,33 +1,41 @@
 #pragma once
-#include <iostream>
-#include <memory>
 #include "Process.h"
-#include "Scheduler.h"
+#include <thread>
+
+#include "ScheduleAlgo.h"
 
 class Core
 {
 public:
-	Core(int count, Scheduler *s);
-	Core(int count, Scheduler* s, unsigned int quantum);
-	std::string getProcessName();
-	std::string getCreationTime();
-	int getCore();
-	int getCurrentLine();
-	int getTotalLines();
-	bool isActive();
-	void setProcess(Process &p);
-	void runProcess();
-	// For RR Sched
-	void runRRProcess();
-	void requeue(Process& p);
-	Process* getCurrentProcess();
+	Core(double delayPerExec, int coreID, ScheduleAlgo scheduleAlgo, unsigned int quantumCycleMax);
+	void attachProcess(std::shared_ptr<Process> process);
+	std::shared_ptr<Process> getAttachedProcess();
+	void runFCFS();
+	void runRR();
+
+	bool hasAttachedProcess();
+
+	bool finishedQuantumCycle();
+	void resetQuantumCycle();
+
+	int getCoreID();
+
+	void resetTickDelay();
+
+	void detachProcess();
+
 private:
-	std::unique_ptr<Process> process = nullptr;
-	Scheduler *scheduler;
-	int coreCount;
-	int quantum;
-	bool active = false;
-	bool isFinished();
-	unsigned int delay_per_exec;
+	std::mutex mtx;
+
+	double delayPerExec;
+	unsigned int currentTickDelay;
+	int coreID;
+
+	void incrementTickDelay();
+
+	unsigned int quantumCycle;
+	unsigned int quantumCycleMax;
+	std::shared_ptr<Process> attachedProcess;
+	std::thread workerThread;
 };
 

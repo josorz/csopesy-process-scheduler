@@ -1,19 +1,25 @@
 #pragma once
-#include <iostream>
-#include "ProcessManager.h"
-#include "FCFSScheduler.h"
+#include "BaseScreen.h"
+#include "TypedefRepo.h"
 
-class MainConsole {
+class MainConsole : public AConsole
+{
 public:
 	MainConsole();
 	~MainConsole() = default;
-	void printHeading();
-	void drawConsole();
-	std::string getScreenName(std::string input, std::string command);
-	void readCommand(std::string input);
-	bool isInitialized();
+
+	void onEnabled();
+	void display();
+	void process();
+
+	String formatNA(int num);
+
+	void saveReport();
+
 private:
-	bool isExitRaised = false;
-	bool initialized = false;
-	ProcessManager processManager = ProcessManager();
+	void displayHeader();
+	void handleCommand(String command);
+
+	std::mutex mtx;
 };
+

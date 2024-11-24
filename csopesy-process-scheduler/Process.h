@@ -1,35 +1,68 @@
 #pragma once
-#include <iostream>
+#include <chrono>
+#include <mutex>
 
-// Process Class
-class Process {
-private:
-    std::string processName;
-    int id;
-    int core;
-    int currentLine;
-    int totalLines;
-    std::string creationTime;
-    std::string finishTime;
-    bool fin;
+#include "PrintCommand.h"
+#include "TypedefRepo.h"
+#include <fstream>
 
-    static int processCounter; // consider changing, static/global var = bad
-
+class Process
+{
 public:
-    Process(std::string name, unsigned int min_ins, unsigned int max_ins);
+	Process(String processName, int id, int totalInstructions, PrintCommand command, size_t memoryRequired);
+	String getName() const;
+	int getCurrentInstruction();
+	int getTotalInstructions();
+	std::chrono::system_clock::time_point getCreationTime() const;
+	String getFormattedTime();
+	int getID();
 
-    // Display process information on screen
-    void drawConsole();
+	void run();
 
-    int getID() const { return id; }
-    const std::string& getName() const { return processName; }
-    int getCore() const { return core; }
-    void setCore(int newCore) { core = newCore; }
-    int getCurrentLine() const { return currentLine; }
-    int getTotalLines() const { return totalLines; }
-    const std::string getCreationTime() const { return creationTime; }
-    const std::string getFinishTime() const { return finishTime; }
-    void increaseCurrent() { currentLine++; }
-    void setFinishTime();
-    bool isFinished() const { return currentLine == totalLines; }
+	enum state
+	{
+		READY,
+		RUNNING,
+		FINISHED
+	};
+
+	state getState();
+
+	void readyState();
+	void runningState();
+	void finishState();
+
+	void setCoreID(int coreID);
+	int getCoreID();
+	void openLogFile();
+	void logPrintCommand(const std::string& command);
+	void closeLogFile();
+
+	void printInfo();
+
+	size_t getMemoryRequired();
+	bool isInMemory();
+	void setInMemory(bool inMemory);
+
+private:
+	String processName;
+	std::chrono::system_clock::time_point creationTime;
+	int currentInstruction;
+	int totalInstructions;
+
+	std::ofstream logFile;
+	std::vector<std::string> printCommands;
+
+	String printStatement;
+
+	state processState;
+	int id;
+	int inCoreID;
+
+	size_t memoryRequired;
+	bool inMemory;
+
+	std::mutex mtx;
+
+	PrintCommand command;
 };

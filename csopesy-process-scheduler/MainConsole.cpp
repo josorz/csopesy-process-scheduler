@@ -1,106 +1,280 @@
-#include <iostream>
-#include <string>
-
+#pragma once
 #include "MainConsole.h"
-#include "FCFSScheduler.h"
-#include "ProcessManager.h"
+#include "TypedefRepo.h"
+#include "ConsoleManager.h"
+#include "Process.h"
+#include "AConsole.h"
+#include <iostream>
+#include "utils.h"
+#include <chrono>
+#include <thread>
+#include <sstream>
+#include <memory>
+#include <iomanip>
+#include "PrintCommand.h"
+#include "Scheduler.h"
+#include <fstream>
+#include <stdexcept>
+#include <random>
 
-unsigned int cpuCycles = 0;
+extern ConsoleManager consoleManager;
 
-MainConsole::MainConsole() {
+MainConsole::MainConsole() : AConsole("MAIN_CONSOLE")
+{
 }
 
-void MainConsole::printHeading() {
-    std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
-    std::cout << " / ____| / ____| / __ \\ |  __ \\ |  ____| / ____|\\ \\   / /\n";
-    std::cout << "| |     | (___  | |  | || |__) || |__   | (___   \\ \\_/ / \n";
-    std::cout << "| |      \\___ \\ | |  | ||  ___/ |  __|   \\___ \\   \\   /  \n";
-    std::cout << "| |____  ____) || |__| || |     | |____  ____) |   | |   \n";
-    std::cout << " \\_____||_____/  \\____/ |_|     |______||_____/    |_|   \n";
-    std::cout << "\033[32mHello, Welcome to CSOPESY commandline!\n"; // \033[32m = green color
-    std::cout << "\033[93mType \'exit\' to quit, \'clear\' to clear the screen\n";
-    std::cout << "\033[0m";
+void MainConsole::display() {
+    displayHeader();
+    process();
 }
 
-void MainConsole::drawConsole() {
-    std::string input;
-    while (input != "exit") {
-        // Get user input
+void MainConsole::onEnabled()
+{
+    displayHeader();
+}
+
+void MainConsole::process() {
+    String command;
+    while (true) {
         std::cout << "Enter a command: ";
-        std::getline(std::cin, input);
-
-        // Handle exit explicitly
-        if (input == "exit") {
-            std::cout << "Exiting the program...\n";
-            break;
-        }
-
-        readCommand(input);
+        std::getline(std::cin, command);
+        handleCommand(command);
+        std::cout << std::endl;
     }
 }
 
-bool MainConsole::isInitialized() {
-    return this->initialized;
+void MainConsole::displayHeader() {
+    Utils::printHeader();
 }
 
-std::string MainConsole::getScreenName(std::string input, std::string command) {
-    if (input.length() <= command.length()) {
-        std::cout << "Error: No process specified for " << command << ".\n";
-        return "";
+std::pair<String, String> parseScreenCommand(String userInput) {
+    String command;
+    String name;
+    std::stringstream ss(userInput);
+    ss >> command;  // Gets 'screen'
+    if (ss >> command && (command == "-r" || command == "-s")) {
+        ss >> name;  // Gets the <name>
     }
-
-    std::string screenName = input.substr(command.length());
-    screenName.erase(0, screenName.find_first_not_of(' '));
-
-    if (screenName.empty()) {
-        std::cout << "Error: No process specified for " << command << ".\n";
-    }
-    return screenName;
+    return { command, name };
 }
 
-void MainConsole::readCommand(std::string input) {
-    if (input != "initialize" && !isInitialized()) {
-        std::cout << "Process scheduler uninitialized. Run initialize first.\n";
-        return;
+void MainConsole::handleCommand(String command)
+{
+    auto consoleManager = ConsoleManager::getInstance();
+    if (command == "exit")
+    {
+        std::cout << "Exiting the program..." << std::endl;
+        exit(0);
+        std::terminate();
+
+    }    
+    else if (command == "clear" || command == "cls")
+    {
+        system("cls");
+        displayHeader();
     }
-    else if (input == "initialize") {
-        std::cout << "\n  initialize command recognized. Doing something...\n";
-        if (!isInitialized()) {
-            processManager.init();
-            initialized = true;
+
+    else if (command.substr(0, 6) == "screen")
+    {
+        auto [screenCommand, processName] = parseScreenCommand(command);
+
+        if (screenCommand.empty())
+        {
+            std::cout << "Incomplete arguments. Use 'screen -s <name>' or 'screen -r <name>'." << '\n';
+
+        }
+
+        else if (screenCommand == "-ls")
+        {
+            std::lock_guard<std::mutex> lock(mtx); // Lock the mutex before modifying the vector
+            std::cout << "CPU Utilization: "
+                << std::fixed << std::setprecision(2)
+                << Scheduler::getInstance()->getCPUUtilization() * 100  
+                << "%" << '\n';
+			std::cout << "Cores used: " << Scheduler::getInstance()->getNumberOfCoresUsed() << '\n';
+			std::cout << "Cores available: " << Scheduler::getInstance()->getAvailableCores() << '\n';
+            std::cout << '\n';
+            std::cout << "---------------------------------------" << '\n';
+            std::vector<std::shared_ptr<Process>>& allProcesses = Scheduler::getInstance()->getAllProcess();
+
+            if (allProcesses.empty())
+            {
+                std::cout << "You currently don't have any processes." << '\n';
+            }
+            else
+            {
+                std::cout << "Running Processes:\n";
+            	for (const std::shared_ptr<Process>& process : allProcesses)
+                {
+                    process->printInfo();
+                    //if (process->getCoreID() != -1 && process->getState() != Process::FINISHED)
+                    //{
+                    //    std::cout << std::left << std::setw(25) << process->getName()  
+                    //        << std::setw(30) << process->getFormattedTime()
+                    //        << "Core:" << process->getCoreID() << '\t'
+                    //        << '\t' << process->getCurrentInstruction() << "/"
+                    //        << process->getTotalInstructions() << '\n';
+                    //}
+                }
+                
+                std::cout << "\nFinished Processes:\n";
+
+                for (const std::shared_ptr<Process>& process : allProcesses)
+                {
+                    if (process->getState() == Process::FINISHED) 
+                    {
+                        std::cout << std::left << process->getName() << " | "
+                            << process->getFormattedTime() << " | "
+                            << "Status: FINISHED | "
+                            << process->getCurrentInstruction() << " / "
+                            << process->getTotalInstructions() << " |" << '\n';
+                    }
+                }
+            }
+            std::cout << "---------------------------------------" << '\n';
+        }
+
+
+        else if (processName.empty())
+        {
+            std::cout << "Incomplete arguments. Use 'screen -s <name>' or 'screen -r <name>'." << '\n';
+        }
+        else if (screenCommand == "-s")
+        {
+            if (!consoleManager->isScreenRegistered(processName))
+            {
+                std::random_device rd;  // Random number seed
+                std::mt19937 gen(rd()); // Random number generator (Mersenne Twister)
+                std::uniform_int_distribution<> dis(Scheduler::getInstance()->getMinInstructions(), Scheduler::getInstance()->getMaxInstructions());
+
+                int totalinstructions = dis(gen);
+                // Register new process and switch to the screen
+                String toPrint = "Hello world from " + processName;
+                auto process = std::make_shared<Process>(processName, Scheduler::getInstance()->getAllProcess().size(), totalinstructions, PrintCommand(toPrint), Scheduler::getInstance()->getMemPerProc());
+                auto processScreen = std::make_shared<BaseScreen>(process, processName);
+
+                Scheduler::getInstance()->addNewProcess(process);
+
+                consoleManager->registerScreen(processScreen);
+                consoleManager->switchToScreen(processName);
+            }
+            else
+            {
+                std::cout << "Process '" << processName << "' already exists or has existed. Please provide a different name." << std::endl;
+            }
+        }
+        else if (screenCommand == "-r")
+        {
+            if (!consoleManager->isScreenRegistered(processName))
+            {
+                std::cout << "Process '" << processName << "' not found." << std::endl;
+            }
+            else
+            {
+                consoleManager->switchToScreen(processName);
+            }
+        }
+        else
+        {
+            std::cout << "Incomplete arguments. Use 'screen -s <name>' or 'screen -r <name>'." << '\n';
         }
     }
-    else if (input.substr(0, 10) == "screen -ls") {
-        processManager.listProcess();
-    }
-    else if (input.substr(0, 9) == "screen -s") {
-        std::string screenName = getScreenName(input, "screen -s");
-        if (!screenName.empty()) {
-            processManager.createProcess(screenName);
-        }
-    }
-    else if (input.substr(0, 9) == "screen -r") {
-        std::string screenName = getScreenName(input, "screen -r");
-        if (!screenName.empty()) {
-            processManager.redrawProcess(screenName);
-        }
-    }
-    else if (input == "scheduler-test") {
-        processManager.testScheduler();
+
+    else if (command == "scheduler-test")
+    {
+		Scheduler::getInstance()->schedulerTest();
         std::cout << "Scheduler test ongoing. Continuously generating dummy processes.\n";
     }
-    else if (input == "scheduler-stop") {
-        processManager.stopScheduler();
+    else if (command == "scheduler-stop")
+    {
+        Scheduler::getInstance()->schedulerStop();
         std::cout << "Stopped generating dummy processes.\n";
     }
-    else if (input == "report-util") {
-        processManager.listProcessToFile();
+    else if (command == "report-util")
+    {
+        saveReport();
     }
-    else if (input == "clear") {
-        system("cls");
-        printHeading();
+    else if (command == "debug-info")
+    {
+        std::cout << "Size of Ready Queue: " << Scheduler::getInstance()->getSize() << '\n';
+        std::cout << "Number of cores: " << Scheduler::getInstance()->numCores() << '\n';
+        std::cout << "Process List: \n";
+        Scheduler::getInstance()->printProcesses();
     }
-    else {
-        std::cout << "\n  '" << input << "' is not recognized as an internal or external command.\n";
+    else if (command == "initialize")
+    {
+        std::cout << "The emulator has already been initialized." << std::endl;
     }
+    else
+    {
+        std::cout << "Invalid command. Please try again." << std::endl;
+    }
+}
+
+String MainConsole::formatNA(int num)
+{
+	if (num == -1)
+	{
+        return "N/A";
+	}
+
+	return std::to_string(num);
+
+}
+
+void MainConsole::saveReport()
+{
+    std::ofstream file("csopesy-log.txt");
+    if (!file) {
+        std::cerr << "Error opening file." << std::endl;
+        return;
+    }
+
+    file << "CPU Utilization: "
+        << std::fixed << std::setprecision(2)
+        << Scheduler::getInstance()->getCPUUtilization() * 100
+        << "%" << '\n';
+    file << "Cores used: " << Scheduler::getInstance()->getNumberOfCoresUsed() << '\n';
+    file << "Cores available: " << Scheduler::getInstance()->getAvailableCores() << '\n';
+    file << '\n';
+    file << "---------------------------------------" << '\n';
+    std::vector<std::shared_ptr<Process>>& allProcesses = Scheduler::getInstance()->getAllProcess();
+
+    if (allProcesses.empty())
+    {
+        file << "You currently don't have any processes." << '\n';
+    }
+    else
+    {
+        file << "Running Processes:\n";
+
+        for (const std::shared_ptr<Process>& process : allProcesses)
+        {
+            if (process->getCoreID() != -1 && process->getState() != Process::FINISHED)
+            {
+                file << process->getName() << " | "
+                    << process->getFormattedTime() << " | "
+                    << "Core: " << process->getCoreID() << " | "
+                    << "Status: Running | "
+                    << process->getCurrentInstruction() << " / "
+                    << process->getTotalInstructions() << " |" << '\n';
+            }
+        }
+
+        file << "\nFinished Processes:\n";
+
+        for (const std::shared_ptr<Process>& process : allProcesses)
+        {
+            if (process->getState() == Process::FINISHED)
+            {
+                file << process->getName() << " | "
+                    << process->getFormattedTime() << " | "
+                    << "Status: FINISHED | "
+                    << process->getCurrentInstruction() << " / "
+                    << process->getTotalInstructions() << " |" << '\n';
+            }
+        }
+    }
+    file << "---------------------------------------" << '\n';
+    std::cout << "Report generated at csopesy-log.txt!" << std::endl;
 }

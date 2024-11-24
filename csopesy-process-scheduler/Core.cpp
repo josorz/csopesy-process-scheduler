@@ -1,147 +1,142 @@
-#include <chrono>
-
 #include "Core.h"
-#include "FCFSScheduler.h"
-#include "CPUTick.h"
+#include "Scheduler.h"
+#include "MemoryManager.h"
 
-#include <mutex>
+Core::Core(double delayPerExec, int coreID, ScheduleAlgo scheduleAlgo, unsigned int quantumCycleMax)
+{
+	this->delayPerExec = delayPerExec;
+	this->coreID = coreID;
+	this->quantumCycle = 0;
+	this->quantumCycleMax = quantumCycleMax;
+	this->attachedProcess = nullptr;
+	//this->attachedProcess = nullptr;
 
-std::mutex z;
-
-Core::Core(int count, Scheduler *s) {
-	coreCount = count;
-	scheduler = s;
-	this->delay_per_exec = s->delay_per_exec;
-}
-
-Core::Core(int count, Scheduler* s, unsigned int quantum) {
-	coreCount = count;
-	scheduler = s;
-	this->quantum = quantum;
-	this->delay_per_exec = s->delay_per_exec;
-}
-
-int Core::getCore() {
-	return coreCount;
-}
-
-int Core::getCurrentLine() {
-	return process.get()->getCurrentLine();
-}
-
-int Core::getTotalLines() {
-	return process.get()->getTotalLines();
-}
-
-std::string Core::getProcessName() {
-	return process.get()->getName();
-}
-
-std::string Core::getCreationTime() {
-	return process.get()->getCreationTime();
-}
-
-bool Core::isActive() {
-	//return active;
-	return process != nullptr;
-}
-
-void Core::setProcess(Process &p) {
-	process = std::make_unique<Process>(p);	
-}
-
-void Core::runProcess() {
-	if (process != nullptr && process.get() != nullptr) {
-		this->active = true;
-
-		Process* p = process.get();
-		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
-
-		while (!p->isFinished()) {
-			z.lock();
-
-			unsigned int current_tick = CPUTick::getInstance().getTick();
-
-			// Check if we have wrapped around
-			if (current_tick >= local_cpu_ctr) {
-				// Normal case
-				if (current_tick - local_cpu_ctr >= delay_per_exec) {
-					p->increaseCurrent();
-					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
-				}
-			}
-			else {
-				// Overflow case
-				if ((UINT_MAX - local_cpu_ctr + current_tick + 1) >= delay_per_exec) {
-					p->increaseCurrent();
-					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
-				}
-			}
-
-			z.unlock();
-		}
-
-		z.lock();
-		scheduler->finishProcess(*p);
-
-		process.reset();
-		this->active = false;
-
-		z.unlock();
+	// Start the thread in the constructor
+	if (scheduleAlgo == FCFS)
+	{
+		this->workerThread = std::thread(&Core::runFCFS, this);
 	}
+	else if (scheduleAlgo == RR)
+	{
+		this->workerThread = std::thread(&Core::runRR, this);
+	}
+
+	this->workerThread.detach();
 }
 
-void Core::runRRProcess() {
-	if (process != nullptr && process.get() != nullptr) {
-		this->active = true;
+void Core::attachProcess(std::shared_ptr<Process> process)
+{
+	std::lock_guard<std::mutex> lock(this->mtx);
+	this->attachedProcess = process;
+}
 
-		Process* p = process.get();
-		int timeRun = 0;  // Track time slice progress
+void Core::detachProcess()
+{
+	this->attachedProcess = nullptr;
+}
 
-		// Run for a time quantum or until finished
-		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
 
-		while (!p->isFinished() && timeRun < quantum) {
-			unsigned int current_tick = CPUTick::getInstance().getTick();
+std::shared_ptr<Process> Core::getAttachedProcess()
+{
+	return this->attachedProcess;
+}
 
-			// Check if we have wrapped around
-			if (current_tick >= local_cpu_ctr) {
-				// Normal case
-				if (current_tick - local_cpu_ctr >= delay_per_exec) {
-					p->increaseCurrent();
-					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
-					timeRun++;
-				}
+void Core::runFCFS()
+{
+	while(true)
+	{
+		this->mtx.lock();
+		if (this->hasAttachedProcess())
+		{
+			if (this->attachedProcess->getState() != Process::FINISHED)
+			{
+				this->attachedProcess->run();
 			}
-			else {
-				// Overflow case
-				if ((UINT_MAX - local_cpu_ctr + current_tick + 1) >= delay_per_exec) {
-					p->increaseCurrent();
-					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
-					timeRun++;
-				}
+			else if (this->attachedProcess->getState() == Process::FINISHED)
+			{
+				detachProcess();
 			}
 		}
-
-		z.lock();
-
-		if (p->isFinished()) {
-			// If process finished, notify scheduler
-			scheduler->finishProcess(*p);
-			process.reset();
-		}
-		else {
-			// If process not finished, re-add to ready queue for next round
-			scheduler->requeueProcess(*p);
-			process.reset();
-		}
-
-		this->active = false;
-		z.unlock();
+		this->mtx.unlock();
+		std::this_thread::sleep_for(std::chrono::duration<double>(this->delayPerExec));
 	}
 
 }
 
-Process* Core::getCurrentProcess() {
-	return process.get();
+void Core::runRR()
+{
+	while (true)
+	{
+		this->mtx.lock();
+		if (this->hasAttachedProcess())
+		{
+			if (!this->finishedQuantumCycle()
+				&& this->attachedProcess->getState() == Process::RUNNING)
+			{
+				this->attachedProcess->run();
+				this->quantumCycle = this->quantumCycle + 1;
+			}
+			else if (this->attachedProcess->getState() == Process::FINISHED)
+			{
+				MemoryManager::getInstance()->deallocate(attachedProcess->getID(), attachedProcess->getMemoryRequired());
+				attachedProcess->setInMemory(false);
+				detachProcess();
+			}
+		}
+		
+		this->mtx.unlock();
+		std::this_thread::sleep_for(std::chrono::duration<double>(this->delayPerExec));
+	}
+}
+
+void Core::resetQuantumCycle()
+{
+	std::lock_guard<std::mutex> lock(this->mtx);
+	this->quantumCycle = 0;
+}
+
+bool Core::finishedQuantumCycle()
+{
+	if (this->quantumCycle >= this->quantumCycleMax)
+	{
+		return true;
+	}
+
+	return false;
+	//return this->quantumCycle >= this->quantumCycleMax;
+}
+
+
+void Core::resetTickDelay()
+{
+	this->currentTickDelay = 0;
+}
+
+void Core::incrementTickDelay()
+{
+	if (this->currentTickDelay >= this->delayPerExec)
+	{
+		resetTickDelay();
+		return;
+	}
+
+	this->currentTickDelay = this->currentTickDelay + 1;
+}
+
+
+
+bool Core::hasAttachedProcess()
+{
+	//std::lock_guard<std::mutex> lock(this->mtx);
+	if (this->attachedProcess)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+int Core::getCoreID()
+{
+	return this->coreID;
 }

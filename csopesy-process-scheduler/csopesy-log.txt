@@ -1,0 +1,7 @@
+CPU Utilization: 0.00%
+Cores used: 0
+Cores available: 10
+
+---------------------------------------
+You currently don't have any processes.
+---------------------------------------
