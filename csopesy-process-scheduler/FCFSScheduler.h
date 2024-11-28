@@ -27,4 +27,6 @@ private:
 	unsigned int cpuCycles = 0;
 	int processCtr = 0;
 	std::string procName = "";
+	size_t minPerProc;
+	size_t maxPerProc;
 };

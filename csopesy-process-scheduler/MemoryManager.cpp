@@ -32,7 +32,7 @@ bool MemoryManager::allocateMem(Process& process) {
     size_t requiredPages = calcFrames(memoryRequired);
 
     if (requiredPages > freeFrameList.size()) {
-        std::cerr << "Cannot allocate. Not enough frames";
+        //std::cerr << "Cannot allocate. Not enough frames";
         return false;
     }
 

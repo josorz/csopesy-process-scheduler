@@ -30,6 +30,7 @@ public:
     // Get total number of frames
     size_t getNumFrames() const;
 
+    size_t getFreeFrames() { return freeFrameList.size(); }
 private:
     // Singleton instance
     static MemoryManager* sharedInstance;
