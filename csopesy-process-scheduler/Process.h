@@ -13,11 +13,12 @@ private:
     std::string finishTime;
     bool fin;
 
-    static int processCounter; // consider changing, static/global var = bad
+    static int processCounter;
+    size_t memoryRequired;
+    bool isMemAllocated;
 
 public:
-    Process(std::string name, unsigned int min_ins, unsigned int max_ins);
-
+    Process(std::string name, unsigned int min_ins, unsigned int max_ins, size_t minPerProc, size_t maxPerProc);
     // Display process information on screen
     void drawConsole();
 
@@ -32,4 +33,8 @@ public:
     void increaseCurrent() { currentLine++; }
     void setFinishTime();
     bool isFinished() const { return currentLine == totalLines; }
+
+    size_t getMemoryRequired() const { return memoryRequired; };
+    bool getMemAllocated() const { return isMemAllocated; }
+    void setMemAllocated(bool status) { isMemAllocated = status; }
 };

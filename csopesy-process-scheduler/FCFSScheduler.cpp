@@ -11,7 +11,7 @@
 
 #include "CPUTick.h"
 
-FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
+FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec, size_t minPerProc, size_t maxPerProc) : Scheduler() {
     this->num_cpu = num_cpu;
     this->batch_process_freq = batch_process_freq;
     this->min_ins = min_ins;
@@ -22,6 +22,7 @@ FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsig
 void FCFSScheduler::run() {
     int processCtr = 0;
     while (true) {
+        
         m.lock();
         if (!readyQueue.empty()) {
             // find vacant core
@@ -33,18 +34,18 @@ void FCFSScheduler::run() {
                     // Run
                     std::thread FCFSThread(&Core::runProcess, &core);
                     FCFSThread.detach();
-
+                    
                     readyQueue.pop_front();
 
                     break;
                 }
             }
         }
+        
         m.unlock();
 
         m.lock();
         scheduler_test();
-
         m.unlock();
 
         CPUTick::getInstance().addTick();
@@ -66,8 +67,8 @@ void FCFSScheduler::scheduler_test() {
         else {
             procName += std::to_string(processCtr);
         }
-
-        readyQueue.push_back(Process(procName, min_ins, max_ins));
+        
+        readyQueue.push_back(Process(procName, min_ins, max_ins, minPerProc, maxPerProc));
 
         procName = "";
         cpuCycles = 0;
@@ -82,10 +83,9 @@ FCFSScheduler::~FCFSScheduler() {
 }
 
 void FCFSScheduler::init() {
-    int num_cores = 4;
 
     // initialize cores
-    for (int x = 0; x < num_cores; x++) {
+    for (int x = 0; x < num_cpu; x++) {
         cores.push_back(Core(x, this));
     }
 

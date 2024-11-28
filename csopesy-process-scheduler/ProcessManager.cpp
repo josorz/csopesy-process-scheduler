@@ -31,7 +31,7 @@ void ProcessManager::createProcess(const std::string& baseName) {
         name = baseName + " (" + std::to_string(suffix++) + ")";
     }
 
-    Process newProcess(name, min_ins, max_ins);
+    Process newProcess(name, min_ins, max_ins, minPerProc, maxPerProc);
     this->processes.push_back(newProcess);
     scheduler->addProcess(newProcess);
     Process* process = &this->processes.back();

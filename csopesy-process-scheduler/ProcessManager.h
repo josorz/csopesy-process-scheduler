@@ -10,6 +10,7 @@ private:
     std::vector<Process> processes;
     bool isInitialized = false;
     unsigned int min_ins, max_ins;
+    size_t minPerProc, maxPerProc;
 public:
     ~ProcessManager();
     // func to create new process and display its console

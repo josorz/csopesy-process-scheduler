@@ -9,12 +9,6 @@
 int Process::processCounter = 0;
 
 namespace Utils {
-    // used for now
-    int generateRandomNumber(int lower, int upper) {
-        srand(time(NULL));
-        return rand() % (upper - lower + 1) + lower;
-    }
-
     // get current timestamp as a string
     std::string getCurrentTimestamp() {
         auto now = std::chrono::system_clock::now();
@@ -28,15 +22,16 @@ namespace Utils {
 }
 
 // initializes process with a name and random instruction count
-Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins) {
+Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins, size_t minPerProc, size_t maxPerProc) {
     processName = name;
     core = -1;
     currentLine = 0;
     totalLines = rand() % (max_ins - min_ins + 1) + min_ins;
     creationTime = Utils::getCurrentTimestamp();
-    fin = false;
-
+    fin = false;    
     id = ++processCounter;
+    memoryRequired = rand() % (maxPerProc - minPerProc + 1) + minPerProc;
+    isMemAllocated = false;
 }
 
 // display process information on screen

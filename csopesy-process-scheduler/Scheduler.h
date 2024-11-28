@@ -31,6 +31,8 @@ protected:
 	unsigned int batch_process_freq;
 	unsigned int min_ins;
 	unsigned int max_ins;
+	size_t minPerProc;
+	size_t maxPerProc;
 	std::mutex m;
 	bool isSchedulerOn = false;
 };

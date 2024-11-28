@@ -10,7 +10,7 @@
 class FCFSScheduler : public Scheduler
 {
 public:
-	FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec);
+	FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec, size_t minPerProc, size_t maxPerProc);
 	~FCFSScheduler();
 	void init() override;
 	void run() override;

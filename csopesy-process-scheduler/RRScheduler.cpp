@@ -15,13 +15,15 @@
 int processCtr = 0;
 std::string procName = "";
 
-RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec) : Scheduler() {
+RRScheduler::RRScheduler(int num_cpu, unsigned int quantum_cycles, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec, size_t minPerProc, size_t maxPerProc) : Scheduler() {
     this->num_cpu = num_cpu;
     this->quantum_cycles = quantum_cycles;
     this->batch_process_freq = batch_process_freq;
     this->min_ins = min_ins;
     this->max_ins = max_ins;
     this->delay_per_exec = delay_per_exec;
+    this->minPerProc = minPerProc;
+    this->maxPerProc = maxPerProc;
 }
 
 void RRScheduler::run() {
@@ -240,7 +242,7 @@ void RRScheduler::scheduler_test() {
             procName += std::to_string(processCtr);
         }
 
-        readyQueue.push_back(Process(procName, min_ins, max_ins));
+        readyQueue.push_back(Process(procName, min_ins, max_ins, minPerProc, maxPerProc));
 
         procName = "";
         processCtr++;

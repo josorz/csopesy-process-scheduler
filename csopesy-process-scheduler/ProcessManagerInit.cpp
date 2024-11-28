@@ -5,12 +5,14 @@
 #include "Scheduler.h"
 #include "FCFSScheduler.h"
 #include "RRScheduler.h"
+#include "MemoryManager.h"
 
 void ProcessManager::init() {
-    int num_cpu;
-    unsigned int quantum_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec;
+    int num_cpu{};
+    unsigned int quantum_cycles{}, batch_process_freq{}, min_ins{}, max_ins{}, delay_per_exec{};
+    size_t maxOverallMem{}, memPerFrame{}, minPerProc{}, maxPerProc{};
     std::string schedulerType;
-    
+    bool isFlatAlloc;
     std::ifstream file("config.txt");
 
     if (!file.is_open()) {
@@ -71,6 +73,34 @@ void ProcessManager::init() {
             else if (key == "delay-per-exec") {
                 iss >> delay_per_exec;
             }
+            else if (key == "max-overall-mem") {
+                iss >> maxOverallMem;
+                if (maxOverallMem < 2) {
+                    std::cout << "Invalid bounds! Change initialize.txt";
+                    return;
+                }
+            }
+            else if (key == "mem-per-frame") {
+                iss >> memPerFrame;
+                if (memPerFrame < 2) {
+                    std::cout << "Invalid bounds! Change initialize.txt";
+                    return;
+                }
+            }
+            else if (key == "min-mem-per-proc") {
+                iss >> minPerProc;
+                if (minPerProc < 2) {
+                    std::cout << "Invalid bounds! Change initialize.txt";
+                    return;
+                }
+            }
+            else if (key == "max-mem-per-proc") {
+                iss >> maxPerProc;
+                if (maxPerProc < 2) {
+                    std::cout << "Invalid bounds! Change initialize.txt";
+                    return;
+                }
+            }
         }
     }
 
@@ -83,16 +113,28 @@ void ProcessManager::init() {
     std::cout << "Min Instructions: " << min_ins << std::endl;
     std::cout << "Max Instructions: " << max_ins << std::endl;
     std::cout << "Delay Per Exec: " << delay_per_exec << std::endl;
+    std::cout << "Max Overall Memory: " << maxOverallMem << std::endl;
+    std::cout << "Mem per Frame: " << memPerFrame << std::endl;
+    std::cout << "Min mem per Proc: " << minPerProc << std::endl;
+    std::cout << "Max mem per Proc: " << maxPerProc << std::endl;
 
     this->min_ins = min_ins;
     this->max_ins = max_ins;
 
     if (schedulerType == "fcfs") {
-        scheduler = new FCFSScheduler(num_cpu, batch_process_freq, min_ins, max_ins, delay_per_exec);
+        scheduler = new FCFSScheduler(num_cpu, batch_process_freq, min_ins, max_ins, delay_per_exec, minPerProc, maxPerProc);
     }
     else if (schedulerType == "rr") {
-        scheduler = new RRScheduler(num_cpu, quantum_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec);
+        scheduler = new RRScheduler(num_cpu, quantum_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec, minPerProc, maxPerProc);
     }
+    if (maxOverallMem == memPerFrame) {
+        isFlatAlloc = true;
+    }
+    else {
+        isFlatAlloc = false;
+    }
+    MemoryManager::initialize(maxOverallMem, memPerFrame,isFlatAlloc);
+
     scheduler->init();
     std::thread start_scheduler(&Scheduler::run, scheduler);
     start_scheduler.detach();

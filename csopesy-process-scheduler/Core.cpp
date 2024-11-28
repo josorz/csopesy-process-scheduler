@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "FCFSScheduler.h"
 #include "CPUTick.h"
-
+#include "MemoryManager.h"
 #include <mutex>
 
 std::mutex z;
@@ -56,6 +56,11 @@ void Core::runProcess() {
 
 		Process* p = process.get();
 		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
+		
+		MemoryManager* memManager = MemoryManager::getInstance();
+		if (!memManager->allocateMem(*p)) {
+			throw std::runtime_error("Memory allocation failed for process: " + p->getName());
+		}
 
 		while (!p->isFinished()) {
 			z.lock();
@@ -83,7 +88,7 @@ void Core::runProcess() {
 
 		z.lock();
 		scheduler->finishProcess(*p);
-
+		memManager->deallocate(p->getID(), p->getMemoryRequired());
 		process.reset();
 		this->active = false;
 
@@ -97,6 +102,11 @@ void Core::runRRProcess() {
 
 		Process* p = process.get();
 		int timeRun = 0;  // Track time slice progress
+
+		MemoryManager* memManager = MemoryManager::getInstance();
+		if (!memManager->allocateMem(*p)) {
+			throw std::runtime_error("Memory allocation failed for process: " + p->getName());
+		}
 
 		// Run for a time quantum or until finished
 		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
@@ -128,6 +138,7 @@ void Core::runRRProcess() {
 		if (p->isFinished()) {
 			// If process finished, notify scheduler
 			scheduler->finishProcess(*p);
+			memManager->deallocate(p->getID(), p->getMemoryRequired());
 			process.reset();
 		}
 		else {
