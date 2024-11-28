@@ -4,6 +4,8 @@
 #include "Process.h"
 #include <thread>
 #include <mutex>
+
+#include "MemoryManager.h"
 // Utility Functions
 
 int Process::processCounter = 0;
@@ -32,6 +34,9 @@ Process::Process(std::string name, unsigned int min_ins, unsigned int max_ins, s
     id = ++processCounter;
     memoryRequired = rand() % (maxPerProc - minPerProc + 1) + minPerProc;
     isMemAllocated = false;
+
+
+    numPages = std::ceil(static_cast<double>(this->memoryRequired) / MemoryManager::getInstance()->getMemPerFrame());
 }
 
 // display process information on screen

@@ -11,12 +11,16 @@
 
 #include "CPUTick.h"
 
+#include "MemoryManager.h"
+
 FCFSScheduler::FCFSScheduler(int num_cpu, unsigned int batch_process_freq, unsigned int min_ins, unsigned int max_ins, unsigned int delay_per_exec, size_t minPerProc, size_t maxPerProc) : Scheduler() {
     this->num_cpu = num_cpu;
     this->batch_process_freq = batch_process_freq;
     this->min_ins = min_ins;
     this->max_ins = max_ins;
     this->delay_per_exec = delay_per_exec;
+    this->minPerProc = minPerProc;
+    this->maxPerProc = maxPerProc;
 }
 
 void FCFSScheduler::run() {
@@ -31,11 +35,24 @@ void FCFSScheduler::run() {
                     // remove
                     Process front = readyQueue.front();
                     core.setProcess(front);
-                    // Run
-                    std::thread FCFSThread(&Core::runProcess, &core);
-                    FCFSThread.detach();
-                    
-                    readyQueue.pop_front();
+
+                    // check if process can run given the current memory
+                    if (MemoryManager::getInstance()->getFreeFrames() >= front.getNumPages()) {
+                        // Run
+                        std::cerr << "Running process " << front.getName() << " \n";
+
+                        std::thread FCFSThread(&Core::runProcess, &core);
+                        FCFSThread.detach();
+
+                        readyQueue.pop_front();
+                    }
+                    else {
+                        std::cerr << "Cannot run process " << front.getName() << " due to memory constraints\n";
+
+                        // Move to the back (???)
+                        readyQueue.pop_front();
+                        readyQueue.push_back(front);
+                    }
 
                     break;
                 }
