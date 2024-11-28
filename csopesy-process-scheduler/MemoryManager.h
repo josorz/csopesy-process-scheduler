@@ -52,4 +52,5 @@ private:
     // Memory structures
     std::vector<char> memory;                              // Physical memory representation
     std::vector<std::pair<bool, int>> allocationMap;       // Allocation map
+    std::vector <size_t> freeFrameList;
 };
