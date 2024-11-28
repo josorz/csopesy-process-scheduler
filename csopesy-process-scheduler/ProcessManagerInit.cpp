@@ -1,11 +1,20 @@
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 #include "ProcessManager.h"
 #include "Scheduler.h"
 #include "FCFSScheduler.h"
 #include "RRScheduler.h"
 #include "MemoryManager.h"
+
+bool isMemoryBoundValid(size_t sizeInKB) {
+    for (size_t i = 1; i <= 32; i++) {
+        if (pow(2, i) == sizeInKB)
+            return true;
+    }
+    return false;
+}
 
 void ProcessManager::init() {
     int num_cpu{};
@@ -75,28 +84,28 @@ void ProcessManager::init() {
             }
             else if (key == "max-overall-mem") {
                 iss >> maxOverallMem;
-                if (maxOverallMem < 2) {
+                if (!isMemoryBoundValid(maxOverallMem)) {
                     std::cout << "Invalid bounds! Change initialize.txt";
                     return;
                 }
             }
             else if (key == "mem-per-frame") {
                 iss >> memPerFrame;
-                if (memPerFrame < 2) {
+                if (!isMemoryBoundValid(memPerFrame)) {
                     std::cout << "Invalid bounds! Change initialize.txt";
                     return;
                 }
             }
             else if (key == "min-mem-per-proc") {
                 iss >> minPerProc;
-                if (minPerProc < 2) {
+                if (!isMemoryBoundValid(minPerProc)) {
                     std::cout << "Invalid bounds! Change initialize.txt";
                     return;
                 }
             }
             else if (key == "max-mem-per-proc") {
                 iss >> maxPerProc;
-                if (maxPerProc < 2) {
+                if (!isMemoryBoundValid(maxPerProc)) {
                     std::cout << "Invalid bounds! Change initialize.txt";
                     return;
                 }
