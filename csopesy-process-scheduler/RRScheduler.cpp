@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "CPUTick.h"
+#include "MemoryManager.h"
 
 int processCtr = 0;
 std::string procName = "";
@@ -30,23 +31,28 @@ void RRScheduler::run() {
     while (true) {
         m.lock();
         // Check if there are processes in either the readyQueue or rrQueue
+        if (!isSchedulerOn) {
+            m.unlock();
+            continue;
+        }
         for (auto& core : cores) {
             if (!core.isActive()) {  // If core is inactive, we can assign a new process
-
                 // Check for a process in the readyQueue first
+                // Remove process from the readyQueue
                 if (!readyQueue.empty()) {
-                    // Remove process from the readyQueue
                     Process front = readyQueue.front();
-                    readyQueue.pop_front();
+                    if (MemoryManager::getInstance()->allocateMem(front)) {
+                        readyQueue.pop_front();
 
-                    // Assign process to the core
-                    core.setProcess(front);
+                        // Assign process to the core
+                        core.setProcess(front);
 
-                    // Run the process for a time quantum
-                    std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach(); // Detach the thread to allow it to run independently
+                        // Run the process for a time quantum
+                        std::thread RRThread(&Core::runRRProcess, &core);
+                        RRThread.detach(); // Detach the thread to allow it to run independently
 
-                    break; // Exit after assigning a process to one core
+                        break; // Exit after assigning a process to one core
+                    }
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
