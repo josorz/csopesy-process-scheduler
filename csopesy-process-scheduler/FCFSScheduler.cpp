@@ -70,7 +70,7 @@ void FCFSScheduler::run() {
 
 void FCFSScheduler::scheduler_test() {
     unsigned int tick = CPUTick::getInstance().getTick();
-
+    
     if (!isSchedulerOn) return;
 
     // scheduler-test
