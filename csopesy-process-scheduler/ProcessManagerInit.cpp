@@ -121,6 +121,9 @@ void ProcessManager::init() {
     this->min_ins = min_ins;
     this->max_ins = max_ins;
 
+    this->minPerProc = minPerProc;
+    this->maxPerProc = maxPerProc;
+
     if (schedulerType == "fcfs") {
         scheduler = new FCFSScheduler(num_cpu, batch_process_freq, min_ins, max_ins, delay_per_exec, minPerProc, maxPerProc);
     }
