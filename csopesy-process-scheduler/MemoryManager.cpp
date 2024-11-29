@@ -15,92 +15,49 @@ MemoryManager* MemoryManager::getInstance() {
 MemoryManager::MemoryManager(size_t memSize, size_t memPerFrame, bool isFlatAlloc)
     : maxOverallMem(memSize), memPerFrame(memPerFrame), isFlatAlloc(isFlatAlloc), numPagedIn(0), numPagedOut(0) {
     numFrames = calcFrames(memSize);
-    if (isFlatAlloc) {
-        // Initialize memory for flat allocation
-        memory = std::vector<char>(memSize, '.');
+    for (size_t i = 0; i < numFrames; i++) {
+        freeFrameList.push_back(i);
+        allocationMap.push_back(std::make_pair(false, 0));       // Allocation map
     }
-    allocationMap.resize(numFrames, { false, 0 }); // {isAllocated, processID}
 }
 
 size_t MemoryManager::calcFrames(size_t size) const {
     return (size + memPerFrame - 1) / memPerFrame;
 }
 
-bool MemoryManager::canAllocateFlat(size_t size, size_t* frameIndex) {
-    bool allocated = false;
-    size_t requiredFrames = calcFrames(size);
-
-    for (size_t mainPointer = 0; mainPointer < numFrames; mainPointer++) {
-        allocated = true;
-        for (size_t tracker = mainPointer; tracker < mainPointer + requiredFrames; tracker++) {
-            if (tracker >= numFrames || allocationMap[tracker].first) {
-                mainPointer = tracker; // Skip ahead to the next unallocated region
-                allocated = false;
-                break;
-            }
-        }
-        if (allocated) {
-            *frameIndex = mainPointer;
-            break;
-        }
-    }
-    return allocated;
-}
-
 bool MemoryManager::allocateMem(Process& process) {
-    size_t frameIndex;
     size_t memoryRequired = process.getMemoryRequired();
+  
+    // Paging memory allocation
+    size_t requiredPages = calcFrames(memoryRequired);
 
-    if (isFlatAlloc) {
-        // Flat memory allocation
-        if (canAllocateFlat(memoryRequired, &frameIndex)) {
-            size_t requiredFrames = calcFrames(memoryRequired);
-            for (size_t i = frameIndex; i < frameIndex + requiredFrames; i++) {
-                allocationMap[i] = { true, process.getID() };
-            }
-            process.setMemAllocated(true); // Update process status
-            return true;
-        }
-    } else {
-        // Paging memory allocation
-        size_t requiredPages = calcFrames(memoryRequired);
-        size_t allocatedPages = 0;
-
-        for (size_t i = 0; i < numFrames; i++) {
-            if (!allocationMap[i].first) {
-                allocationMap[i] = { true, process.getID() };
-                allocatedPages++;
-                if (allocatedPages == requiredPages) {
-                    process.setMemAllocated(true); // Update process status
-                    incrementPagedIn();
-                    return true;
-                }
-            }
-        }
-        for (size_t i = 0; i < numFrames; i++) {
-            if (allocationMap[i].second == process.getID()) {
-                allocationMap[i].first = false;
-                incrementPagedOut();
-            }
-        }
+    if (requiredPages > freeFrameList.size()) {
+        //std::cerr << "Cannot allocate. Not enough frames";
+        return false;
     }
-    return false;
+
+    for (size_t i = 0; i < requiredPages; i++) {
+        size_t vacant_page = freeFrameList.front();
+
+        // remove first element of frame list
+        freeFrameList.erase(freeFrameList.begin());
+
+        if (!allocationMap[vacant_page].first) {
+            allocationMap[vacant_page] = { true, process.getID() };
+            incrementPagedIn();
+        }
+        std::cout << "Allocating page " << vacant_page << " to process " << process.getID() << std::endl;
+    }
+    
+    return true;
 }
 
 void MemoryManager::deallocate(int pid, size_t size) {
-    if (isFlatAlloc) {
-        for (size_t i = 0; i < numFrames; i++) {
-            if (allocationMap[i].second == pid) {
-                allocationMap[i].first = false;
-            }
-        }
-    }
-    else {
-        for (size_t i = 0; i < numFrames; i++) {
-            if (allocationMap[i].second == pid) {
-                allocationMap[i].first = false;
-                incrementPagedOut();
-            }
+    for (size_t i = 0; i < numFrames; i++) {
+        if (allocationMap[i].second == pid && allocationMap[i].first) {
+            allocationMap[i].first = false;
+            freeFrameList.push_back(i);
+            incrementPagedOut();
         }
     }
 }

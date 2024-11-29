@@ -30,6 +30,8 @@ public:
     // Get total number of frames
     size_t getNumFrames() const { return numFrames; };
 
+    size_t getFreeFrames() { return freeFrameList.size(); }
+  
     // Get total used memory
     size_t getUsedMemory() const;
 
@@ -62,4 +64,5 @@ private:
     // Memory structures
     std::vector<char> memory;                              // Physical memory representation
     std::vector<std::pair<bool, int>> allocationMap;       // Allocation map
+    std::vector <size_t> freeFrameList;
 };

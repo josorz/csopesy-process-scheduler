@@ -57,10 +57,6 @@ void Core::runProcess() {
 		Process* p = process.get();
 		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
 		
-		if (!MemoryManager::getInstance()->allocateMem(*p)) {
-			throw std::runtime_error("Memory allocation failed for process: " + p->getName());
-		}
-
 		while (!p->isFinished()) {
 			z.lock();
 
@@ -104,11 +100,6 @@ void Core::runRRProcess() {
 		Process* p = process.get();
 		int timeRun = 0;  // Track time slice progress
 
-		MemoryManager* memManager = MemoryManager::getInstance();
-		if (!memManager->allocateMem(*p)) {
-			throw std::runtime_error("Memory allocation failed for process: " + p->getName());
-		}
-
 		// Run for a time quantum or until finished
 		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
 
@@ -140,7 +131,7 @@ void Core::runRRProcess() {
 		if (p->isFinished()) {
 			// If process finished, notify scheduler
 			scheduler->finishProcess(*p);
-			memManager->deallocate(p->getID(), p->getMemoryRequired());
+			MemoryManager::getInstance()->deallocate(p->getID(), p->getMemoryRequired());
 			process.reset();
 		}
 		else {

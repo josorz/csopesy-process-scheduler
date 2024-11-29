@@ -15,6 +15,7 @@ private:
 
     static int processCounter;
     size_t memoryRequired;
+    size_t numPages;
     bool isMemAllocated;
 
 public:
@@ -37,4 +38,6 @@ public:
     size_t getMemoryRequired() const { return memoryRequired; };
     bool getMemAllocated() const { return isMemAllocated; }
     void setMemAllocated(bool status) { isMemAllocated = status; }
+
+    size_t getNumPages() { return numPages; }
 };
