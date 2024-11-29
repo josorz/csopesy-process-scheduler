@@ -26,6 +26,9 @@ public:
     // redraw console for an existing process
     void redrawProcess(const std::string& name);
 
+    void processSMI();
+    void vmstat();
+
     void testScheduler();
     void stopScheduler();
 };

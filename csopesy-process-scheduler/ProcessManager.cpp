@@ -66,6 +66,14 @@ void ProcessManager::redrawProcess(const std::string& name) {
     }
 }
 
+void ProcessManager::processSMI() {
+    scheduler->processSMI();
+}
+
+void ProcessManager::vmstat() {
+    scheduler->vmstat();
+}
+
 void ProcessManager::listProcess() {
     scheduler->listProcess();
 }

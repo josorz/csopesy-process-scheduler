@@ -4,6 +4,7 @@
 #include "MainConsole.h"
 #include "FCFSScheduler.h"
 #include "ProcessManager.h"
+#include "Scheduler.h"
 
 unsigned int cpuCycles = 0;
 
@@ -95,6 +96,12 @@ void MainConsole::readCommand(std::string input) {
     }
     else if (input == "report-util") {
         processManager.listProcessToFile();
+    }
+    else if (input == "process-smi") {
+        processManager.processSMI();
+    }
+    else if (input == "vmstat") {
+        processManager.vmstat();
     }
     else if (input == "clear") {
         system("cls");
