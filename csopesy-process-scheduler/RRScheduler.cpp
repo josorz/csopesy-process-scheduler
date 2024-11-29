@@ -10,9 +10,9 @@
 #include <chrono>
 #include <ctime>
 #include <sstream>
+#include <fstream>
 
 #include "CPUTick.h"
-#include "MemoryManager.h"
 
 int processCtr = 0;
 std::string procName = "";
@@ -42,10 +42,9 @@ void RRScheduler::run() {
                 // Remove process from the readyQueue
                 if (!readyQueue.empty()) {
                     Process front = readyQueue.front();
-                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                    if (!MemoryManager::getInstance()->canAllocateMem(front)) {
                         // Remove the oldest process
-                        MemoryManager::getInstance()->deallocate();
-
+                        handleBackingStoreDeallocation();
                     }
                     if (MemoryManager::getInstance()->canAllocateMem(front)) {
                         MemoryManager::getInstance()->allocateMem(front);
@@ -68,11 +67,12 @@ void RRScheduler::run() {
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
-                if (!rrQueue.empty()) {
+                else if (!rrQueue.empty()) {
                     // Remove process from the rrQueue
                     Process front = rrQueue.front();
-                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                    if (!MemoryManager::getInstance()->canAllocateMem(front)) {
                         // Remove the oldest process
+                        handleBackingStoreDeallocation();
                     }
                     if (MemoryManager::getInstance()->canAllocateMem(front)) {
                         MemoryManager::getInstance()->allocateMem(front);
@@ -101,6 +101,73 @@ void RRScheduler::run() {
         m.unlock();
         CPUTick::getInstance().addTick();
     }
+}
+
+void RRScheduler::handleBackingStoreDeallocation() {
+    MemoryManager* memoryManager = MemoryManager::getInstance();
+
+    // Read the first line of the backing store
+    std::ifstream inFile("backing_store.txt");
+    if (!inFile.is_open()) {
+        std::cerr << "Failed to open backing store file!\n";
+        return;
+    }
+
+    std::string firstLine;
+    std::getline(inFile, firstLine); // Read the first line
+    inFile.close();
+
+    if (firstLine.empty()) {
+        std::cout << "Backing store is empty. Nothing to deallocate.\n";
+        return;
+    }
+
+    // Parse the PID from the first line
+    std::istringstream iss(firstLine);
+    std::string token;
+    int pid = -1;
+    int memoryRequired = -1;
+
+    while (iss >> token) {
+        if (token == "PID:") {
+            iss >> pid;
+        }
+        else if (token == "Req.:") {
+            iss >> memoryRequired;
+            break;
+        }
+    }
+
+    if (pid == -1) {
+        std::cerr << "Failed to parse PID from backing store line: " << firstLine << "\n";
+        return;
+    }
+
+    // Deallocate the process using MemoryManager
+    memoryManager->deallocate(pid, memoryRequired);
+
+    // std::cout << "Deallocated memory for process with PID: " << pid << "\n";
+
+    // Rewrite the backing store file without the first line
+    std::ifstream inFileAgain("backing_store.txt");
+    std::ofstream tempFile("backing_store_temp.txt");
+
+    std::string line;
+    bool firstLineSkipped = false;
+    while (std::getline(inFileAgain, line)) {
+        if (!firstLineSkipped) {
+            firstLineSkipped = true; // Skip the first line
+            continue;
+        }
+        tempFile << line << "\n";
+    }
+
+    inFileAgain.close();
+    tempFile.close();
+
+    // Replace the original file with the updated one
+    std::remove("backing_store.txt");
+    std::rename("backing_store_temp.txt", "backing_store.txt");
 }
 
 

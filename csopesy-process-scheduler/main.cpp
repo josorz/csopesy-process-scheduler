@@ -6,6 +6,7 @@
 
 
 int main() {
+
     MainConsole *mainConsole = new MainConsole();
 
     mainConsole->printHeading();
