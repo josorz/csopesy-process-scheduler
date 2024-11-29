@@ -48,8 +48,6 @@ void RRScheduler::run() {
                     RRThread.detach(); // Detach the thread to allow it to run independently
 
                     break; // Exit after assigning a process to one core
-                } else {
-                    CPUTick::getInstance().addIdleTick();
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
@@ -66,9 +64,9 @@ void RRScheduler::run() {
                     RRThread.detach(); // Detach the thread to allow it to run independently
 
                     break; // Exit after assigning a process to one core
-                } else {
-                    CPUTick::getInstance().addIdleTick();
-                }
+                } 
+            } else {
+                CPUTick::getInstance().addIdleTick();
             }
         }
         scheduler_test();
