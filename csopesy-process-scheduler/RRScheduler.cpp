@@ -42,7 +42,13 @@ void RRScheduler::run() {
                 // Remove process from the readyQueue
                 if (!readyQueue.empty()) {
                     Process front = readyQueue.front();
-                    if (MemoryManager::getInstance()->allocateMem(front)) {
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        // Remove the oldest process
+                        MemoryManager::getInstance()->deallocate();
+
+                    }
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        MemoryManager::getInstance()->allocateMem(front);
                         readyQueue.pop_front();
 
                         // Assign process to the core
@@ -65,7 +71,11 @@ void RRScheduler::run() {
                 if (!rrQueue.empty()) {
                     // Remove process from the rrQueue
                     Process front = rrQueue.front();
-                    if (MemoryManager::getInstance()->allocateMem(front)) {
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        // Remove the oldest process
+                    }
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        MemoryManager::getInstance()->allocateMem(front);
                         rrQueue.pop_front();
 
                         // Assign process to the core

@@ -26,6 +26,32 @@ size_t MemoryManager::calcFrames(size_t size) const {
     return (size + memPerFrame - 1) / memPerFrame;
 }
 
+bool MemoryManager::canAllocateMem(Process& process) {
+    size_t memoryRequired = process.getMemoryRequired();
+
+    // Paging memory allocation
+    size_t requiredPages = calcFrames(memoryRequired);
+
+    if (requiredPages > freeFrameList.size()) {
+        std::ofstream outFile("backing_store.txt", std::ios::app);
+
+        if (requiredPages > freeFrameList.size()) {
+            if (outFile.is_open()) {
+                // Write the log message to the file
+                outFile << "PID: " << process.getID() << " Name: " << process.getName() << " INS: " << process.getTotalLines() << " Num. Pages: " << requiredPages << " Mem. Req.: " << memoryRequired << ".\n";
+            }
+            else {
+                std::cerr << "Failed to open backing store file!" << std::endl;
+            }
+            outFile.close();
+            return false;
+        }
+        //std::cerr << "Cannot allocate. Not enough frames";
+        return false;
+    }
+    return true;
+}
+
 bool MemoryManager::allocateMem(Process& process) {
     size_t memoryRequired = process.getMemoryRequired();
   

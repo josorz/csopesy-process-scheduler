@@ -12,6 +12,8 @@ public:
     // Get the singleton instance
     static MemoryManager* getInstance();
 
+    bool canAllocateMem(Process& process);
+
     // Allocate memory for a process
     bool allocateMem(Process& process);
 
