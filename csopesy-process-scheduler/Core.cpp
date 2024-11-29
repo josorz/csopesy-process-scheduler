@@ -77,7 +77,7 @@ void Core::runProcess() {
 					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
 				}
 			}
-
+			CPUTick::getInstance().addActiveTick();
 			z.unlock();
 		}
 
@@ -88,6 +88,8 @@ void Core::runProcess() {
 		this->active = false;
 
 		z.unlock();
+	} else {
+		CPUTick::getInstance().addIdleTick();
 	}
 }
 
@@ -121,6 +123,7 @@ void Core::runRRProcess() {
 					timeRun++;
 				}
 			}
+			CPUTick::getInstance().addActiveTick();
 		}
 
 		z.lock();
@@ -139,6 +142,8 @@ void Core::runRRProcess() {
 
 		this->active = false;
 		z.unlock();
+	} else {
+		CPUTick::getInstance().addIdleTick();
 	}
 
 }

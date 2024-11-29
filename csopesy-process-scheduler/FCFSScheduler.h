@@ -16,6 +16,8 @@ public:
 	void run() override;
 	void listProcess() override;
 	void listProcessToFile() override;
+	void processSMI() override;
+	void vmstat() override;
 	void addProcess(Process p) override;
 	void stop() override;
 	Process* findProcess(std::string name) override;

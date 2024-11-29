@@ -13,7 +13,7 @@ MemoryManager* MemoryManager::getInstance() {
 }
 
 MemoryManager::MemoryManager(size_t memSize, size_t memPerFrame, bool isFlatAlloc)
-    : maxOverallMem(memSize), memPerFrame(memPerFrame) {
+    : maxOverallMem(memSize), memPerFrame(memPerFrame), isFlatAlloc(isFlatAlloc), numPagedIn(0), numPagedOut(0) {
     numFrames = calcFrames(memSize);
     for (size_t i = 0; i < numFrames; i++) {
         freeFrameList.push_back(i);
@@ -27,7 +27,7 @@ size_t MemoryManager::calcFrames(size_t size) const {
 
 bool MemoryManager::allocateMem(Process& process) {
     size_t memoryRequired = process.getMemoryRequired();
-
+  
     // Paging memory allocation
     size_t requiredPages = calcFrames(memoryRequired);
 
@@ -44,6 +44,7 @@ bool MemoryManager::allocateMem(Process& process) {
 
         if (!allocationMap[vacant_page].first) {
             allocationMap[vacant_page] = { true, process.getID() };
+            incrementPagedIn();
         }
         std::cout << "Allocating page " << vacant_page << " to process " << process.getID() << std::endl;
     }
@@ -56,6 +57,7 @@ void MemoryManager::deallocate(int pid, size_t size) {
         if (allocationMap[i].second == pid && allocationMap[i].first) {
             allocationMap[i].first = false;
             freeFrameList.push_back(i);
+            incrementPagedOut();
         }
     }
 }
@@ -64,14 +66,12 @@ const std::vector<std::pair<bool, int>>& MemoryManager::getAllocationMap() const
     return allocationMap;
 }
 
-size_t MemoryManager::getMemorySize() const {
-    return maxOverallMem;
-}
-
-size_t MemoryManager::getMemPerFrame() const {
-    return memPerFrame;
-}
-
-size_t MemoryManager::getNumFrames() const {
-    return numFrames;
+size_t MemoryManager::getUsedMemory() const {
+    size_t usedMemory = 0;
+    for (const auto& frame : allocationMap) {
+        if (frame.first) { // Check if the frame is occupied
+            usedMemory += memPerFrame;
+        }
+    }
+    return usedMemory;
 }
