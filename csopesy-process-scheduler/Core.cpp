@@ -57,8 +57,7 @@ void Core::runProcess() {
 		Process* p = process.get();
 		unsigned int local_cpu_ctr = CPUTick::getInstance().getTick();
 		
-		MemoryManager* memManager = MemoryManager::getInstance();
-		if (!memManager->allocateMem(*p)) {
+		if (!MemoryManager::getInstance()->allocateMem(*p)) {
 			throw std::runtime_error("Memory allocation failed for process: " + p->getName());
 		}
 
@@ -82,17 +81,19 @@ void Core::runProcess() {
 					local_cpu_ctr = current_tick;  // Update local_cpu_ctr
 				}
 			}
-
+			CPUTick::getInstance().addActiveTick();
 			z.unlock();
 		}
 
 		z.lock();
 		scheduler->finishProcess(*p);
-		memManager->deallocate(p->getID(), p->getMemoryRequired());
+		MemoryManager::getInstance()->deallocate(p->getID(), p->getMemoryRequired());
 		process.reset();
 		this->active = false;
 
 		z.unlock();
+	} else {
+		CPUTick::getInstance().addIdleTick();
 	}
 }
 
@@ -131,6 +132,7 @@ void Core::runRRProcess() {
 					timeRun++;
 				}
 			}
+			CPUTick::getInstance().addActiveTick();
 		}
 
 		z.lock();
@@ -149,6 +151,8 @@ void Core::runRRProcess() {
 
 		this->active = false;
 		z.unlock();
+	} else {
+		CPUTick::getInstance().addIdleTick();
 	}
 
 }

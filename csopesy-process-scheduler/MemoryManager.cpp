@@ -13,7 +13,7 @@ MemoryManager* MemoryManager::getInstance() {
 }
 
 MemoryManager::MemoryManager(size_t memSize, size_t memPerFrame, bool isFlatAlloc)
-    : maxOverallMem(memSize), memPerFrame(memPerFrame), isFlatAlloc(isFlatAlloc) {
+    : maxOverallMem(memSize), memPerFrame(memPerFrame), isFlatAlloc(isFlatAlloc), numPagedIn(0), numPagedOut(0) {
     numFrames = calcFrames(memSize);
     if (isFlatAlloc) {
         // Initialize memory for flat allocation
@@ -72,6 +72,7 @@ bool MemoryManager::allocateMem(Process& process) {
                 allocatedPages++;
                 if (allocatedPages == requiredPages) {
                     process.setMemAllocated(true); // Update process status
+                    incrementPagedIn();
                     return true;
                 }
             }
@@ -79,6 +80,7 @@ bool MemoryManager::allocateMem(Process& process) {
         for (size_t i = 0; i < numFrames; i++) {
             if (allocationMap[i].second == process.getID()) {
                 allocationMap[i].first = false;
+                incrementPagedOut();
             }
         }
     }
@@ -97,6 +99,7 @@ void MemoryManager::deallocate(int pid, size_t size) {
         for (size_t i = 0; i < numFrames; i++) {
             if (allocationMap[i].second == pid) {
                 allocationMap[i].first = false;
+                incrementPagedOut();
             }
         }
     }
@@ -106,14 +109,12 @@ const std::vector<std::pair<bool, int>>& MemoryManager::getAllocationMap() const
     return allocationMap;
 }
 
-size_t MemoryManager::getMemorySize() const {
-    return maxOverallMem;
-}
-
-size_t MemoryManager::getMemPerFrame() const {
-    return memPerFrame;
-}
-
-size_t MemoryManager::getNumFrames() const {
-    return numFrames;
+size_t MemoryManager::getUsedMemory() const {
+    size_t usedMemory = 0;
+    for (const auto& frame : allocationMap) {
+        if (frame.first) { // Check if the frame is occupied
+            usedMemory += memPerFrame;
+        }
+    }
+    return usedMemory;
 }

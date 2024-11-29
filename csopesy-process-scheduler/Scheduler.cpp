@@ -22,6 +22,14 @@ void Scheduler::listProcessToFile() {
 
 }
 
+void Scheduler::processSMI() {
+
+}
+
+void Scheduler::vmstat() {
+
+}
+
 void Scheduler::addProcess(Process p) {
 }
 

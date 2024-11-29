@@ -14,6 +14,8 @@ public:
 	void finishProcess(Process p);
 	virtual void listProcess();
 	virtual void listProcessToFile();
+	virtual void processSMI();
+	virtual void vmstat();
 	virtual void addProcess(Process p);
 	virtual void requeueProcess(Process& p) {}
 	virtual Process* findProcess(std::string name) {

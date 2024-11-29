@@ -1,4 +1,5 @@
 #include "RRScheduler.h"
+#include "MemoryManager.h"
 #include "Process.h"
 #include <thread>
 #include <mutex>
@@ -47,6 +48,8 @@ void RRScheduler::run() {
                     RRThread.detach(); // Detach the thread to allow it to run independently
 
                     break; // Exit after assigning a process to one core
+                } else {
+                    CPUTick::getInstance().addIdleTick();
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
@@ -63,6 +66,8 @@ void RRScheduler::run() {
                     RRThread.detach(); // Detach the thread to allow it to run independently
 
                     break; // Exit after assigning a process to one core
+                } else {
+                    CPUTick::getInstance().addIdleTick();
                 }
             }
         }
@@ -178,6 +183,86 @@ void RRScheduler::listProcessToFile() {
     std::cout << "Report saved to report.txt\n";
 }
 
+void RRScheduler::processSMI() {
+    m.lock();
+    MemoryManager* memManager = MemoryManager::getInstance();
+
+    // Get memory usage
+    size_t totalMemory = memManager->getMemorySize();
+    size_t usedMemory = memManager->getUsedMemory();
+    double memoryUtil = (static_cast<double>(usedMemory) / totalMemory) * 100;
+
+    // Get CPU utilization
+    int usedCores = 0;
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            usedCores++;
+        }
+    }
+    double cpuUtilization = (static_cast<double>(usedCores) / num_cpu) * 100;
+
+    // Display the header
+    std::cout << "-----------------------------------------------\n";
+    std::cout << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
+    std::cout << "-----------------------------------------------\n";
+    std::cout << "CPU-Util: " << cpuUtilization << "%\n";
+    std::cout << "Memory Usage: " << usedMemory / 1024 << "MiB / " << totalMemory / 1024 << "MiB\n";
+    std::cout << "Memory Util: " << memoryUtil << "%\n";
+    std::cout << "===============================================\n";
+    std::cout << "Running Processes and Memory Usage:\n";
+    std::cout << "-----------------------------------------------\n";
+
+    // Display running processes and their memory usage
+    for (auto& core : cores) {
+        if (core.isActive()) {
+            Process* currentProcess = core.getCurrentProcess();
+            if (currentProcess != nullptr) {
+                std::cout << currentProcess->getName() << "  "
+                    << currentProcess->getMemoryRequired() << "MiB\n";
+            }
+        }
+    }
+
+    std::cout << "-----------------------------------------------\n";
+
+    m.unlock();
+}
+
+void RRScheduler::vmstat() {
+    m.lock();
+    MemoryManager* memManager = MemoryManager::getInstance();
+    if (!memManager) {
+        std::cerr << "Memory Manager is not initialized.\n";
+    }
+
+    // Memory Statistics
+    size_t totalMemoryKB = memManager->getMemorySize(); // Total memory in KB
+    size_t usedMemoryKB = memManager->getUsedMemory();  // Used memory in KB
+    size_t freeMemoryKB = totalMemoryKB - usedMemoryKB; // Free memory in KB
+
+    // CPU Statistics
+    unsigned int idleTicks = CPUTick::getInstance().getIdleTicks();
+    unsigned int activeTicks = CPUTick::getInstance().getActiveTicks();
+    unsigned int totalTicks = activeTicks + idleTicks;
+
+    // Paging Statistics
+    size_t numPagedIn = memManager->getPagedInCount();   // Number of pages paged in
+    size_t numPagedOut = memManager->getPagedOutCount(); // Number of pages paged out
+
+    // Output the statistics
+    std::cout << "===============================================\n";
+    std::cout << "Total memory: " << totalMemoryKB << " KB\n";
+    std::cout << "Used memory: " << usedMemoryKB / 1024 << " MiB\n";
+    std::cout << "Free memory: " << freeMemoryKB / 1024 << " MiB\n";
+    std::cout << "Idle cpu ticks: " << idleTicks << " Ticks\n";
+    std::cout << "Active cpu ticks: " << activeTicks << " Ticks\n";
+    std::cout << "Total cpu ticks: " << totalTicks << " Ticks\n";
+    std::cout << "Num paged in: " << numPagedIn << " ins\n";
+    std::cout << "Num paged out: " << numPagedOut << " outs\n";
+    std::cout << "-----------------------------------------------\n";
+    
+    m.unlock();
+}
 
 void RRScheduler::addProcess(Process p) {
     m.lock();

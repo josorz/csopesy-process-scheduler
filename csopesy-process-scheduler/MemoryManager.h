@@ -22,14 +22,22 @@ public:
     const std::vector<std::pair<bool, int>>& getAllocationMap() const;
 
     // Get memory size
-    size_t getMemorySize() const;
+    size_t getMemorySize() const { return maxOverallMem; };
 
     // Get memory size per frame
-    size_t getMemPerFrame() const;
+    size_t getMemPerFrame() const { return memPerFrame; };
 
     // Get total number of frames
-    size_t getNumFrames() const;
+    size_t getNumFrames() const { return numFrames; };
 
+    // Get total used memory
+    size_t getUsedMemory() const;
+
+    void incrementPagedIn() { numPagedIn++; };
+    void incrementPagedOut() { numPagedOut++; };
+    size_t getPagedInCount() const { return numPagedIn; };
+    size_t getPagedOutCount() const { return numPagedOut; };
+    
 private:
     // Singleton instance
     static MemoryManager* sharedInstance;
@@ -48,6 +56,8 @@ private:
     size_t memPerFrame;   // Size of each frame/page
     size_t numFrames;     // Total number of frames/pages
     bool isFlatAlloc;     // Flat allocation mode flag
+    size_t numPagedIn;
+    size_t numPagedOut;
 
     // Memory structures
     std::vector<char> memory;                              // Physical memory representation
