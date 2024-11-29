@@ -89,6 +89,8 @@ bool MemoryManager::allocateMem(Process& process) {
         std::cout << "Allocating page " << vacant_page << " to process " << process.getID() << std::endl;
     }
     
+    allocationHistory.push_back({std::time(nullptr), process.getID()});
+
     return true;
 }
 
@@ -98,6 +100,16 @@ void MemoryManager::deallocate(int pid, size_t size) {
             allocationMap[i].first = false;
             freeFrameList.push_back(i);
             incrementPagedOut();
+        }
+    }
+
+    for (auto it = allocationHistory.begin(); it != allocationHistory.end(); ++it) {
+        if (it->second == pid) { // Check if processID matches
+            std::cout << "Found and removing entry for Process ID " << pid << ":\n";
+            std::cout << "Timestamp: " << it->first << "\n";
+
+            allocationHistory.erase(it); // Remove the matching entry
+            break; // Exit loop after removing
         }
     }
 }

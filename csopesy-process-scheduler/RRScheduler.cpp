@@ -106,68 +106,26 @@ void RRScheduler::run() {
 void RRScheduler::handleBackingStoreDeallocation() {
     MemoryManager* memoryManager = MemoryManager::getInstance();
 
-    // Read the first line of the backing store
-    std::ifstream inFile("backing_store.txt");
-    if (!inFile.is_open()) {
-        std::cerr << "Failed to open backing store file!\n";
-        return;
+    // get the oldest process on the memory manager
+    std::pair<std::time_t, int> oldestProcess = memoryManager->allocationHistory.front();
+
+    // check if it is inactive
+    bool isActive = false;
+    for (auto& core : cores) {
+        if (core.isActive())
+            if (core.getCurrentProcess()->getID() == oldestProcess.second)
+                isActive = true;
     }
+    // if yes
+    if (!isActive) {
+        // put it on the backing store
+        // TODO
+        // deallocate it
+        memoryManager->deallocate(oldestProcess.second, 0);
 
-    std::string firstLine;
-    std::getline(inFile, firstLine); // Read the first line
-    inFile.close();
-
-    if (firstLine.empty()) {
-        std::cout << "Backing store is empty. Nothing to deallocate.\n";
-        return;
+        if (memoryManager->allocationHistory.size() > 0)
+            memoryManager->allocationHistory.pop_front();
     }
-
-    // Parse the PID from the first line
-    std::istringstream iss(firstLine);
-    std::string token;
-    int pid = -1;
-    int memoryRequired = -1;
-
-    while (iss >> token) {
-        if (token == "PID:") {
-            iss >> pid;
-        }
-        else if (token == "Req.:") {
-            iss >> memoryRequired;
-            break;
-        }
-    }
-
-    if (pid == -1) {
-        std::cerr << "Failed to parse PID from backing store line: " << firstLine << "\n";
-        return;
-    }
-
-    // Deallocate the process using MemoryManager
-    memoryManager->deallocate(pid, memoryRequired);
-
-    // std::cout << "Deallocated memory for process with PID: " << pid << "\n";
-
-    // Rewrite the backing store file without the first line
-    std::ifstream inFileAgain("backing_store.txt");
-    std::ofstream tempFile("backing_store_temp.txt");
-
-    std::string line;
-    bool firstLineSkipped = false;
-    while (std::getline(inFileAgain, line)) {
-        if (!firstLineSkipped) {
-            firstLineSkipped = true; // Skip the first line
-            continue;
-        }
-        tempFile << line << "\n";
-    }
-
-    inFileAgain.close();
-    tempFile.close();
-
-    // Replace the original file with the updated one
-    std::remove("backing_store.txt");
-    std::rename("backing_store_temp.txt", "backing_store.txt");
 }
 
 
