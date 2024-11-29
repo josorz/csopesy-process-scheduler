@@ -2,6 +2,8 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <ctime>
+#include <deque>
 #include "Process.h"
 
 class MemoryManager {
@@ -11,6 +13,8 @@ public:
 
     // Get the singleton instance
     static MemoryManager* getInstance();
+
+    bool canAllocateMem(Process& process);
 
     // Allocate memory for a process
     bool allocateMem(Process& process);
@@ -39,7 +43,9 @@ public:
     void incrementPagedOut() { numPagedOut++; };
     size_t getPagedInCount() const { return numPagedIn; };
     size_t getPagedOutCount() const { return numPagedOut; };
-    
+
+
+    std::deque<std::pair<std::time_t, int>> allocationHistory;    
 private:
     // Singleton instance
     static MemoryManager* sharedInstance;

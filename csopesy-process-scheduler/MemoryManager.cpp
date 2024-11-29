@@ -1,4 +1,5 @@
 #include "MemoryManager.h"
+#include <fstream>
 
 MemoryManager* MemoryManager::sharedInstance = nullptr;
 
@@ -25,6 +26,32 @@ size_t MemoryManager::calcFrames(size_t size) const {
     return (size + memPerFrame - 1) / memPerFrame;
 }
 
+bool MemoryManager::canAllocateMem(Process& process) {
+    size_t memoryRequired = process.getMemoryRequired();
+
+    // Paging memory allocation
+    size_t requiredPages = calcFrames(memoryRequired);
+
+    if (requiredPages > freeFrameList.size()) {
+        std::ofstream outFile("backing_store.txt", std::ios::app);
+
+        if (requiredPages > freeFrameList.size()) {
+            if (outFile.is_open()) {
+                // Write the log message to the file
+                outFile << "PID: " << process.getID() << " Name: " << process.getName() << " INS: " << process.getTotalLines() << " Num. Pages: " << requiredPages << " Mem. Req.: " << memoryRequired << ".\n";
+            }
+            else {
+                std::cerr << "Failed to open backing store file!" << std::endl;
+            }
+            outFile.close();
+            return false;
+        }
+        //std::cerr << "Cannot allocate. Not enough frames";
+        return false;
+    }
+    return true;
+}
+
 bool MemoryManager::allocateMem(Process& process) {
     size_t memoryRequired = process.getMemoryRequired();
   
@@ -32,6 +59,19 @@ bool MemoryManager::allocateMem(Process& process) {
     size_t requiredPages = calcFrames(memoryRequired);
 
     if (requiredPages > freeFrameList.size()) {
+        std::ofstream outFile("backing_store.txt", std::ios::app);
+
+        if (requiredPages > freeFrameList.size()) {
+            if (outFile.is_open()) {
+                // Write the log message to the file
+                outFile << "PID: " << process.getID() << " Name: " << process.getName() << " INS: " << process.getTotalLines() << " Num. Pages: " << requiredPages << " Mem. Req.: " << memoryRequired << ".\n";
+            }
+            else {
+                std::cerr << "Failed to open backing store file!" << std::endl;
+            }
+            outFile.close();
+            return false;
+        }
         //std::cerr << "Cannot allocate. Not enough frames";
         return false;
     }
@@ -49,6 +89,8 @@ bool MemoryManager::allocateMem(Process& process) {
         std::cout << "Allocating page " << vacant_page << " to process " << process.getID() << std::endl;
     }
     
+    allocationHistory.push_back({std::time(nullptr), process.getID()});
+
     return true;
 }
 
@@ -58,6 +100,16 @@ void MemoryManager::deallocate(int pid, size_t size) {
             allocationMap[i].first = false;
             freeFrameList.push_back(i);
             incrementPagedOut();
+        }
+    }
+
+    for (auto it = allocationHistory.begin(); it != allocationHistory.end(); ++it) {
+        if (it->second == pid) { // Check if processID matches
+            std::cout << "Found and removing entry for Process ID " << pid << ":\n";
+            std::cout << "Timestamp: " << it->first << "\n";
+
+            allocationHistory.erase(it); // Remove the matching entry
+            break; // Exit loop after removing
         }
     }
 }

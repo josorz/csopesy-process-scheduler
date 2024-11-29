@@ -44,7 +44,7 @@ void FCFSScheduler::run() {
                         // Run
                         core.setProcess(front);
                         //std::cerr << "Running process " << front.getName() << " \n";
-
+                        
                         std::thread FCFSThread(&Core::runProcess, &core);
                         FCFSThread.detach();
 

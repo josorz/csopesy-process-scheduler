@@ -22,6 +22,7 @@ public:
 	void requeueProcess(Process &p) override;
 	void stop() override;
 	void scheduler_test();
+	void handleBackingStoreDeallocation();
 	Process *findProcess(std::string name) override;
 private:
 	std::deque<Process> rrQueue;

@@ -10,9 +10,9 @@
 #include <chrono>
 #include <ctime>
 #include <sstream>
+#include <fstream>
 
 #include "CPUTick.h"
-#include "MemoryManager.h"
 
 int processCtr = 0;
 std::string procName = "";
@@ -42,7 +42,12 @@ void RRScheduler::run() {
                 // Remove process from the readyQueue
                 if (!readyQueue.empty()) {
                     Process front = readyQueue.front();
-                    if (MemoryManager::getInstance()->allocateMem(front)) {
+                    if (!MemoryManager::getInstance()->canAllocateMem(front)) {
+                        // Remove the oldest process
+                        handleBackingStoreDeallocation();
+                    }
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        MemoryManager::getInstance()->allocateMem(front);
                         readyQueue.pop_front();
 
                         // Assign process to the core
@@ -54,22 +59,39 @@ void RRScheduler::run() {
 
                         break; // Exit after assigning a process to one core
                     }
+                    else {
+                        rrQueue.push_back(front);
+                        readyQueue.pop_front();
+                        break;
+                    }
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
-                if (!rrQueue.empty()) {
+                else if (!rrQueue.empty()) {
                     // Remove process from the rrQueue
                     Process front = rrQueue.front();
-                    rrQueue.pop_front();
+                    if (!MemoryManager::getInstance()->canAllocateMem(front)) {
+                        // Remove the oldest process
+                        handleBackingStoreDeallocation();
+                    }
+                    if (MemoryManager::getInstance()->canAllocateMem(front)) {
+                        MemoryManager::getInstance()->allocateMem(front);
+                        rrQueue.pop_front();
 
-                    // Assign process to the core
-                    core.setProcess(front);
+                        // Assign process to the core
+                        core.setProcess(front);
 
-                    // Run the process for a time quantum
-                    std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach(); // Detach the thread to allow it to run independently
+                        // Run the process for a time quantum
+                        std::thread RRThread(&Core::runRRProcess, &core);
+                        RRThread.detach(); // Detach the thread to allow it to run independently
 
-                    break; // Exit after assigning a process to one core
+                        break; // Exit after assigning a process to one core
+                    }
+                    else {
+                        rrQueue.push_back(front);
+                        rrQueue.pop_front();
+                        break;
+                    }
                 } 
             } else {
                 CPUTick::getInstance().addIdleTick();
@@ -78,6 +100,31 @@ void RRScheduler::run() {
         scheduler_test();
         m.unlock();
         CPUTick::getInstance().addTick();
+    }
+}
+
+void RRScheduler::handleBackingStoreDeallocation() {
+    MemoryManager* memoryManager = MemoryManager::getInstance();
+
+    // get the oldest process on the memory manager
+    std::pair<std::time_t, int> oldestProcess = memoryManager->allocationHistory.front();
+
+    // check if it is inactive
+    bool isActive = false;
+    for (auto& core : cores) {
+        if (core.isActive())
+            if (core.getCurrentProcess()->getID() == oldestProcess.second)
+                isActive = true;
+    }
+    // if yes
+    if (!isActive) {
+        // put it on the backing store
+        // TODO
+        // deallocate it
+        memoryManager->deallocate(oldestProcess.second, 0);
+
+        if (memoryManager->allocationHistory.size() > 0)
+            memoryManager->allocationHistory.pop_front();
     }
 }
 
