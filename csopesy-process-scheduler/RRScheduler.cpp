@@ -54,22 +54,34 @@ void RRScheduler::run() {
 
                         break; // Exit after assigning a process to one core
                     }
+                    else {
+                        rrQueue.push_back(front);
+                        readyQueue.pop_front();
+                        break;
+                    }
                 }
 
                 // If no process was taken from readyQueue, check rrQueue
                 if (!rrQueue.empty()) {
                     // Remove process from the rrQueue
                     Process front = rrQueue.front();
-                    rrQueue.pop_front();
+                    if (MemoryManager::getInstance()->allocateMem(front)) {
+                        rrQueue.pop_front();
 
-                    // Assign process to the core
-                    core.setProcess(front);
+                        // Assign process to the core
+                        core.setProcess(front);
 
-                    // Run the process for a time quantum
-                    std::thread RRThread(&Core::runRRProcess, &core);
-                    RRThread.detach(); // Detach the thread to allow it to run independently
+                        // Run the process for a time quantum
+                        std::thread RRThread(&Core::runRRProcess, &core);
+                        RRThread.detach(); // Detach the thread to allow it to run independently
 
-                    break; // Exit after assigning a process to one core
+                        break; // Exit after assigning a process to one core
+                    }
+                    else {
+                        rrQueue.push_back(front);
+                        rrQueue.pop_front();
+                        break;
+                    }
                 } 
             } else {
                 CPUTick::getInstance().addIdleTick();
